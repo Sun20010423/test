@@ -1,0 +1,827 @@
+,original_method,cleaned_method,input_method,target_block,tokens_in_method,flattened_method
+7211,"    def _send_from_command_queue(self):__NEW_LINE__        # We loop here to make sure that if we do NOT send the first command__NEW_LINE__        # from the queue, we'll send the second (if there is one). We do not__NEW_LINE__        # want to get stuck here by throwing away commands.__NEW_LINE__        while True:__NEW_LINE__            if self.isStreaming():__NEW_LINE__                # command queue irrelevant__NEW_LINE__                return False__NEW_LINE____NEW_LINE__            try:__NEW_LINE__                entry = self._command_queue.get(block=False)__NEW_LINE__            except queue.Empty:__NEW_LINE__                # nothing in command queue__NEW_LINE__                return False__NEW_LINE____NEW_LINE__            try:__NEW_LINE__                if isinstance(entry, tuple):__NEW_LINE__                    if not len(entry) == 4:__NEW_LINE__                        # something with that entry is broken, ignore it and fetch__NEW_LINE__                        # the next one__NEW_LINE__                        continue__NEW_LINE__                    cmd, cmd_type, callback, tags = entry__NEW_LINE__                else:__NEW_LINE__                    cmd = entry__NEW_LINE__                    cmd_type = None__NEW_LINE__                    callback = None__NEW_LINE__                    tags = None__NEW_LINE____NEW_LINE__                if self._sendCommand(cmd, cmd_type=cmd_type, on_sent=callback, tags=tags):__NEW_LINE__                    # we actually did add this cmd to the send queue, so let's__NEW_LINE__                    # return, we are done here__NEW_LINE__                    return True__NEW_LINE__            finally:__NEW_LINE__                self._command_queue.task_done()","def _send_from_command_queue(self):
+    # We loop here to make sure that if we do NOT send the first command
+    # from the queue, we'll send the second (if there is one). We do not
+    # want to get stuck here by throwing away commands.
+    while True:
+        if self.isStreaming():
+            # command queue irrelevant
+            return False
+        try:
+            entry = self._command_queue.get(block=False)
+        except queue.Empty:
+            # nothing in command queue
+            return False
+        try:
+            if isinstance(entry, tuple):
+                if not len(entry) == 4:
+                    # something with that entry is broken, ignore it and fetch
+                    # the next one
+                    continue
+                cmd, cmd_type, callback, tags = entry
+            else:
+                cmd = entry
+                cmd_type = None
+                callback = None
+                tags = None
+            if self._sendCommand(cmd, cmd_type=cmd_type, on_sent=callback, tags=tags):
+                # we actually did add this cmd to the send queue, so let's
+                # return, we are done here
+                return True
+        finally:
+            self._command_queue.task_done()
+","def _send_from_command_queue ( self ) : <TAB> <TAB> <TAB> <TAB> while True : <TAB> <TAB> if self . isStreaming ( ) : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> return False <TAB> <TAB> try : <TAB> <TAB> <TAB> entry = self . _command_queue . get ( block = False ) <TAB> <TAB> except queue . Empty : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> return False <TAB> <TAB> try : <TAB> <TAB> <TAB> if isinstance ( entry , tuple ) : <TAB> <TAB> <TAB> <TAB> if not len ( entry ) == 4 : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> <TAB> cmd , cmd_type , callback , tags = entry <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> cmd = entry <TAB> <TAB> <TAB> <TAB> cmd_type = None <TAB> <TAB> <TAB> <TAB> callback = None <TAB> <TAB> <TAB> <TAB> tags = None <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> return True <TAB> <TAB> finally : <TAB> <TAB> <TAB> self . _command_queue . task_done ( )","if self . _sendCommand ( cmd , cmd_type = cmd_type , on_sent = callback , tags = tags ) :",348,"def_send_from_command_queue(self):__NEW_LINE__#WeloopheretomakesurethatifwedoNOTsendthefirstcommand__NEW_LINE__#fromthequeue,we'llsendthesecond(ifthereisone).Wedonot__NEW_LINE__#wanttogetstuckherebythrowingawaycommands.__NEW_LINE__whileTrue:__NEW_LINE__ifself.isStreaming():__NEW_LINE__#commandqueueirrelevant__NEW_LINE__returnFalse__NEW_LINE____NEW_LINE__try:__NEW_LINE__entry=self._command_queue.get(block=False)__NEW_LINE__exceptqueue.Empty:__NEW_LINE__#nothingincommandqueue__NEW_LINE__returnFalse__NEW_LINE____NEW_LINE__try:__NEW_LINE__ifisinstance(entry,tuple):__NEW_LINE__ifnotlen(entry)==4:__NEW_LINE__#somethingwiththatentryisbroken,ignoreitandfetch__NEW_LINE__#thenextone__NEW_LINE__continue__NEW_LINE__cmd,cmd_type,callback,tags=entry__NEW_LINE__else:__NEW_LINE__cmd=entry__NEW_LINE__cmd_type=None__NEW_LINE__callback=None__NEW_LINE__tags=None__NEW_LINE____NEW_LINE__ifself._sendCommand(cmd,cmd_type=cmd_type,on_sent=callback,tags=tags):__NEW_LINE__#weactuallydidaddthiscmdtothesendqueue,solet's__NEW_LINE__#return,wearedonehere__NEW_LINE__returnTrue__NEW_LINE__finally:__NEW_LINE__self._command_queue.task_done()"
+2621,"    def feed(self, byte_str, num_bytes):__NEW_LINE__        if self._done:__NEW_LINE__            return__NEW_LINE____NEW_LINE__        # The buffer we got is byte oriented, and a character may span in more than one__NEW_LINE__        # buffers. In case the last one or two byte in last buffer is not__NEW_LINE__        # complete, we record how many byte needed to complete that character__NEW_LINE__        # and skip these bytes here.  We can choose to record those bytes as__NEW_LINE__        # well and analyse the character once it is complete, but since a__NEW_LINE__        # character will not make much difference, by simply skipping__NEW_LINE__        # this character will simply our logic and improve performance.__NEW_LINE__        i = self._need_to_skip_char_num__NEW_LINE__        while i < num_bytes:__NEW_LINE__            order, char_len = self.get_order(byte_str[i:i + 2])__NEW_LINE__            i += char_len__NEW_LINE__            if i > num_bytes:__NEW_LINE__                self._need_to_skip_char_num = i - num_bytes__NEW_LINE__                self._last_char_order = -1__NEW_LINE__            else:__NEW_LINE__                if (order != -1) and (self._last_char_order != -1):__NEW_LINE__                    self._total_rel += 1__NEW_LINE__                    if self._total_rel > self.MAX_REL_THRESHOLD:__NEW_LINE__                        self._done = True__NEW_LINE__                        break__NEW_LINE__                    self._rel_sample[jp2CharContext[self._last_char_order][order]] += 1__NEW_LINE__                self._last_char_order = order","def feed(self, byte_str, num_bytes):
+    if self._done:
+        return
+    # The buffer we got is byte oriented, and a character may span in more than one
+    # buffers. In case the last one or two byte in last buffer is not
+    # complete, we record how many byte needed to complete that character
+    # and skip these bytes here.  We can choose to record those bytes as
+    # well and analyse the character once it is complete, but since a
+    # character will not make much difference, by simply skipping
+    # this character will simply our logic and improve performance.
+    i = self._need_to_skip_char_num
+    while i < num_bytes:
+        order, char_len = self.get_order(byte_str[i : i + 2])
+        i += char_len
+        if i > num_bytes:
+            self._need_to_skip_char_num = i - num_bytes
+            self._last_char_order = -1
+        else:
+            if (order != -1) and (self._last_char_order != -1):
+                self._total_rel += 1
+                if self._total_rel > self.MAX_REL_THRESHOLD:
+                    self._done = True
+                    break
+                self._rel_sample[jp2CharContext[self._last_char_order][order]] += 1
+            self._last_char_order = order
+","def feed ( self , byte_str , num_bytes ) : <TAB> if self . _done : <TAB> <TAB> return <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> i = self . _need_to_skip_char_num <TAB> while i < num_bytes : <TAB> <TAB> order , char_len = self . get_order ( byte_str [ i : i + 2 ] ) <TAB> <TAB> i += char_len <TAB> <TAB> if i > num_bytes : <TAB> <TAB> <TAB> self . _need_to_skip_char_num = i - num_bytes <TAB> <TAB> <TAB> self . _last_char_order = - 1 <TAB> <TAB> else : <TAB> <TAB> <TAB> if ( order != - 1 ) and ( self . _last_char_order != - 1 ) : <TAB> <TAB> <TAB> <TAB> self . _total_rel += 1 <TAB> <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> <TAB> self . _done = True <TAB> <TAB> <TAB> <TAB> <TAB> break <TAB> <TAB> <TAB> <TAB> self . _rel_sample [ jp2CharContext [ self . _last_char_order ] [ order ] ] += 1 <TAB> <TAB> <TAB> self . _last_char_order = order",if self . _total_rel > self . MAX_REL_THRESHOLD :,362,"deffeed(self,byte_str,num_bytes):__NEW_LINE__ifself._done:__NEW_LINE__return__NEW_LINE____NEW_LINE__#Thebufferwegotisbyteoriented,andacharactermayspaninmorethanone__NEW_LINE__#buffers.Incasethelastoneortwobyteinlastbufferisnot__NEW_LINE__#complete,werecordhowmanybyteneededtocompletethatcharacter__NEW_LINE__#andskipthesebyteshere.Wecanchoosetorecordthosebytesas__NEW_LINE__#wellandanalysethecharacteronceitiscomplete,butsincea__NEW_LINE__#characterwillnotmakemuchdifference,bysimplyskipping__NEW_LINE__#thischaracterwillsimplyourlogicandimproveperformance.__NEW_LINE__i=self._need_to_skip_char_num__NEW_LINE__whilei<num_bytes:__NEW_LINE__order,char_len=self.get_order(byte_str[i:i+2])__NEW_LINE__i+=char_len__NEW_LINE__ifi>num_bytes:__NEW_LINE__self._need_to_skip_char_num=i-num_bytes__NEW_LINE__self._last_char_order=-1__NEW_LINE__else:__NEW_LINE__if(order!=-1)and(self._last_char_order!=-1):__NEW_LINE__self._total_rel+=1__NEW_LINE__ifself._total_rel>self.MAX_REL_THRESHOLD:__NEW_LINE__self._done=True__NEW_LINE__break__NEW_LINE__self._rel_sample[jp2CharContext[self._last_char_order][order]]+=1__NEW_LINE__self._last_char_order=order"
+21089,"def readline(_size=-1, prompt='', float=True, priority=10):__NEW_LINE__    # The argument  _size is unused, but is there for compatibility__NEW_LINE__    # with the existing readline__NEW_LINE____NEW_LINE__    global buffer_handle, prompt_handle, suggest_handle, eof, \__NEW_LINE__        show_suggestions__NEW_LINE____NEW_LINE__    # XXX circular imports__NEW_LINE__    from pwnlib.term import term_mode__NEW_LINE__    if not term_mode:__NEW_LINE__        six.print_(prompt, end='', flush=True)__NEW_LINE__        return getattr(sys.stdin, 'buffer', sys.stdin).readline(_size).rstrip(b'\n')__NEW_LINE__    show_suggestions = False__NEW_LINE__    eof = False__NEW_LINE__    if prompt:__NEW_LINE__        prompt_handle = term.output(prompt, float = float, priority = priority)__NEW_LINE__    else:__NEW_LINE__        prompt_handle = None__NEW_LINE__    buffer_handle = term.output(float = float, priority = priority)__NEW_LINE__    suggest_handle = None__NEW_LINE__    clear()__NEW_LINE__    if startup_hook:__NEW_LINE__        startup_hook()__NEW_LINE__    try:__NEW_LINE__        while True:__NEW_LINE__            try:__NEW_LINE__                try:__NEW_LINE__                    keymap.handle_input()__NEW_LINE__                except EOFError:__NEW_LINE__                    if len(buffer_left + buffer_right) == 0:__NEW_LINE__                        return b''__NEW_LINE__                if eof:__NEW_LINE__                    return b''__NEW_LINE__                else:__NEW_LINE__                    buffer = (buffer_left + buffer_right)__NEW_LINE__                    if buffer:__NEW_LINE__                        history.insert(0, buffer)__NEW_LINE__                    return force_to_bytes(buffer) + b'\n'__NEW_LINE__            except KeyboardInterrupt:__NEW_LINE__                control_c()__NEW_LINE__    finally:__NEW_LINE__        line = buffer_left + buffer_right + '\n'__NEW_LINE__        buffer_handle.update(line)__NEW_LINE__        buffer_handle.freeze()__NEW_LINE__        buffer_handle = None__NEW_LINE__        if prompt_handle:__NEW_LINE__            prompt_handle.freeze()__NEW_LINE__            prompt_handle = None__NEW_LINE__        if suggest_handle:__NEW_LINE__            suggest_handle.freeze()__NEW_LINE__            suggest_handle = None__NEW_LINE__        if shutdown_hook:__NEW_LINE__            shutdown_hook()","def readline(_size=-1, prompt="""", float=True, priority=10):
+    # The argument  _size is unused, but is there for compatibility
+    # with the existing readline
+    global buffer_handle, prompt_handle, suggest_handle, eof, show_suggestions
+    # XXX circular imports
+    from pwnlib.term import term_mode
+    if not term_mode:
+        six.print_(prompt, end="""", flush=True)
+        return getattr(sys.stdin, ""buffer"", sys.stdin).readline(_size).rstrip(b""\n"")
+    show_suggestions = False
+    eof = False
+    if prompt:
+        prompt_handle = term.output(prompt, float=float, priority=priority)
+    else:
+        prompt_handle = None
+    buffer_handle = term.output(float=float, priority=priority)
+    suggest_handle = None
+    clear()
+    if startup_hook:
+        startup_hook()
+    try:
+        while True:
+            try:
+                try:
+                    keymap.handle_input()
+                except EOFError:
+                    if len(buffer_left + buffer_right) == 0:
+                        return b""""
+                if eof:
+                    return b""""
+                else:
+                    buffer = buffer_left + buffer_right
+                    if buffer:
+                        history.insert(0, buffer)
+                    return force_to_bytes(buffer) + b""\n""
+            except KeyboardInterrupt:
+                control_c()
+    finally:
+        line = buffer_left + buffer_right + ""\n""
+        buffer_handle.update(line)
+        buffer_handle.freeze()
+        buffer_handle = None
+        if prompt_handle:
+            prompt_handle.freeze()
+            prompt_handle = None
+        if suggest_handle:
+            suggest_handle.freeze()
+            suggest_handle = None
+        if shutdown_hook:
+            shutdown_hook()
+","def readline ( _size = - 1 , prompt = """" , float = True , priority = 10 ) : <TAB> <TAB> <TAB> global buffer_handle , prompt_handle , suggest_handle , eof , show_suggestions <TAB> <TAB> from pwnlib . term import term_mode <TAB> if not term_mode : <TAB> <TAB> six . print_ ( prompt , end = """" , flush = True ) <TAB> <TAB> return getattr ( sys . stdin , ""buffer"" , sys . stdin ) . readline ( _size ) . rstrip ( b""\n"" ) <TAB> show_suggestions = False <TAB> eof = False <TAB> if prompt : <TAB> <TAB> prompt_handle = term . output ( prompt , float = float , priority = priority ) <TAB> else : <TAB> <TAB> prompt_handle = None <TAB> buffer_handle = term . output ( float = float , priority = priority ) <TAB> suggest_handle = None <TAB> clear ( ) <TAB> if startup_hook : <TAB> <TAB> startup_hook ( ) <TAB> try : <TAB> <TAB> while True : <TAB> <TAB> <TAB> try : <TAB> <TAB> <TAB> <TAB> try : <TAB> <TAB> <TAB> <TAB> <TAB> keymap . handle_input ( ) <TAB> <TAB> <TAB> <TAB> except EOFError : <TAB> <TAB> <TAB> <TAB> <TAB> if len ( buffer_left + buffer_right ) == 0 : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> return b"""" <TAB> <TAB> <TAB> <TAB> if eof : <TAB> <TAB> <TAB> <TAB> <TAB> return b"""" <TAB> <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> <TAB> buffer = buffer_left + buffer_right <TAB> <TAB> <TAB> <TAB> <TAB> if buffer : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> history . insert ( 0 , buffer ) <TAB> <TAB> <TAB> <TAB> <TAB> return force_to_bytes ( buffer ) + b""\n"" <TAB> <TAB> <TAB> except KeyboardInterrupt : <TAB> <TAB> <TAB> <TAB> control_c ( ) <TAB> finally : <TAB> <TAB> line = buffer_left + buffer_right + ""\n"" <TAB> <TAB> buffer_handle . update ( line ) <TAB> <TAB> buffer_handle . freeze ( ) <TAB> <TAB> buffer_handle = None <TAB> <TAB> if prompt_handle : <TAB> <TAB> <TAB> prompt_handle . freeze ( ) <TAB> <TAB> <TAB> prompt_handle = None <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> suggest_handle . freeze ( ) <TAB> <TAB> <TAB> suggest_handle = None <TAB> <TAB> if shutdown_hook : <TAB> <TAB> <TAB> shutdown_hook ( )",if suggest_handle :,512,"defreadline(_size=-1,prompt='',float=True,priority=10):__NEW_LINE__#Theargument_sizeisunused,butisthereforcompatibility__NEW_LINE__#withtheexistingreadline__NEW_LINE____NEW_LINE__globalbuffer_handle,prompt_handle,suggest_handle,eof,\__NEW_LINE__show_suggestions__NEW_LINE____NEW_LINE__#XXXcircularimports__NEW_LINE__frompwnlib.termimportterm_mode__NEW_LINE__ifnotterm_mode:__NEW_LINE__six.print_(prompt,end='',flush=True)__NEW_LINE__returngetattr(sys.stdin,'buffer',sys.stdin).readline(_size).rstrip(b'\n')__NEW_LINE__show_suggestions=False__NEW_LINE__eof=False__NEW_LINE__ifprompt:__NEW_LINE__prompt_handle=term.output(prompt,float=float,priority=priority)__NEW_LINE__else:__NEW_LINE__prompt_handle=None__NEW_LINE__buffer_handle=term.output(float=float,priority=priority)__NEW_LINE__suggest_handle=None__NEW_LINE__clear()__NEW_LINE__ifstartup_hook:__NEW_LINE__startup_hook()__NEW_LINE__try:__NEW_LINE__whileTrue:__NEW_LINE__try:__NEW_LINE__try:__NEW_LINE__keymap.handle_input()__NEW_LINE__exceptEOFError:__NEW_LINE__iflen(buffer_left+buffer_right)==0:__NEW_LINE__returnb''__NEW_LINE__ifeof:__NEW_LINE__returnb''__NEW_LINE__else:__NEW_LINE__buffer=(buffer_left+buffer_right)__NEW_LINE__ifbuffer:__NEW_LINE__history.insert(0,buffer)__NEW_LINE__returnforce_to_bytes(buffer)+b'\n'__NEW_LINE__exceptKeyboardInterrupt:__NEW_LINE__control_c()__NEW_LINE__finally:__NEW_LINE__line=buffer_left+buffer_right+'\n'__NEW_LINE__buffer_handle.update(line)__NEW_LINE__buffer_handle.freeze()__NEW_LINE__buffer_handle=None__NEW_LINE__ifprompt_handle:__NEW_LINE__prompt_handle.freeze()__NEW_LINE__prompt_handle=None__NEW_LINE__ifsuggest_handle:__NEW_LINE__suggest_handle.freeze()__NEW_LINE__suggest_handle=None__NEW_LINE__ifshutdown_hook:__NEW_LINE__shutdown_hook()"
+12292,"    def process(self):__NEW_LINE__        """"""Process the request entity based on its Content-Type.""""""__NEW_LINE__        # ""The presence of a message-body in a request is signaled by the__NEW_LINE__        # inclusion of a Content-Length or Transfer-Encoding header field in__NEW_LINE__        # the request's message-headers.""__NEW_LINE__        # It is possible to send a POST request with no body, for example;__NEW_LINE__        # however, app developers are responsible in that case to set__NEW_LINE__        # cherrypy.request.process_body to False so this method isn't called.__NEW_LINE__        h = cherrypy.serving.request.headers__NEW_LINE__        if 'Content-Length' not in h and 'Transfer-Encoding' not in h:__NEW_LINE__            raise cherrypy.HTTPError(411)__NEW_LINE__        __NEW_LINE__        self.fp = SizedReader(self.fp, self.length,__NEW_LINE__                              self.maxbytes, bufsize=self.bufsize,__NEW_LINE__                              has_trailers='Trailer' in h)__NEW_LINE__        super(RequestBody, self).process()__NEW_LINE__        __NEW_LINE__        # Body params should also be a part of the request_params__NEW_LINE__        # add them in here.__NEW_LINE__        request_params = self.request_params__NEW_LINE__        for key, value in self.params.items():__NEW_LINE__            # Python 2 only: keyword arguments must be byte strings (type 'str').__NEW_LINE__            if sys.version_info < (3, 0):__NEW_LINE__                if isinstance(key, unicode):__NEW_LINE__                    key = key.encode('ISO-8859-1')__NEW_LINE__            __NEW_LINE__            if key in request_params:__NEW_LINE__                if not isinstance(request_params[key], list):__NEW_LINE__                    request_params[key] = [request_params[key]]__NEW_LINE__                request_params[key].append(value)__NEW_LINE__            else:__NEW_LINE__                request_params[key] = value","def process(self):
+    """"""Process the request entity based on its Content-Type.""""""
+    # ""The presence of a message-body in a request is signaled by the
+    # inclusion of a Content-Length or Transfer-Encoding header field in
+    # the request's message-headers.""
+    # It is possible to send a POST request with no body, for example;
+    # however, app developers are responsible in that case to set
+    # cherrypy.request.process_body to False so this method isn't called.
+    h = cherrypy.serving.request.headers
+    if ""Content-Length"" not in h and ""Transfer-Encoding"" not in h:
+        raise cherrypy.HTTPError(411)
+    self.fp = SizedReader(
+        self.fp,
+        self.length,
+        self.maxbytes,
+        bufsize=self.bufsize,
+        has_trailers=""Trailer"" in h,
+    )
+    super(RequestBody, self).process()
+    # Body params should also be a part of the request_params
+    # add them in here.
+    request_params = self.request_params
+    for key, value in self.params.items():
+        # Python 2 only: keyword arguments must be byte strings (type 'str').
+        if sys.version_info < (3, 0):
+            if isinstance(key, unicode):
+                key = key.encode(""ISO-8859-1"")
+        if key in request_params:
+            if not isinstance(request_params[key], list):
+                request_params[key] = [request_params[key]]
+            request_params[key].append(value)
+        else:
+            request_params[key] = value
+","def process ( self ) : <TAB> """"""Process the request entity based on its Content-Type."""""" <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> h = cherrypy . serving . request . headers <TAB> if ""Content-Length"" not in h and ""Transfer-Encoding"" not in h : <TAB> <TAB> raise cherrypy . HTTPError ( 411 ) <TAB> self . fp = SizedReader ( <TAB> <TAB> self . fp , <TAB> <TAB> self . length , <TAB> <TAB> self . maxbytes , <TAB> <TAB> bufsize = self . bufsize , <TAB> <TAB> has_trailers = ""Trailer"" in h , <TAB> ) <TAB> super ( RequestBody , self ) . process ( ) <TAB> <TAB> <TAB> request_params = self . request_params <TAB> for key , value in self . params . items ( ) : <TAB> <TAB> <TAB> <TAB> if sys . version_info < ( 3 , 0 ) : <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> key = key . encode ( ""ISO-8859-1"" ) <TAB> <TAB> if key in request_params : <TAB> <TAB> <TAB> if not isinstance ( request_params [ key ] , list ) : <TAB> <TAB> <TAB> <TAB> request_params [ key ] = [ request_params [ key ] ] <TAB> <TAB> <TAB> request_params [ key ] . append ( value ) <TAB> <TAB> else : <TAB> <TAB> <TAB> request_params [ key ] = value","if isinstance ( key , unicode ) :",424,"defprocess(self):__NEW_LINE__""""""ProcesstherequestentitybasedonitsContent-Type.""""""__NEW_LINE__#""Thepresenceofamessage-bodyinarequestissignaledbythe__NEW_LINE__#inclusionofaContent-LengthorTransfer-Encodingheaderfieldin__NEW_LINE__#therequest'smessage-headers.""__NEW_LINE__#ItispossibletosendaPOSTrequestwithnobody,forexample;__NEW_LINE__#however,appdevelopersareresponsibleinthatcasetoset__NEW_LINE__#cherrypy.request.process_bodytoFalsesothismethodisn'tcalled.__NEW_LINE__h=cherrypy.serving.request.headers__NEW_LINE__if'Content-Length'notinhand'Transfer-Encoding'notinh:__NEW_LINE__raisecherrypy.HTTPError(411)__NEW_LINE____NEW_LINE__self.fp=SizedReader(self.fp,self.length,__NEW_LINE__self.maxbytes,bufsize=self.bufsize,__NEW_LINE__has_trailers='Trailer'inh)__NEW_LINE__super(RequestBody,self).process()__NEW_LINE____NEW_LINE__#Bodyparamsshouldalsobeapartoftherequest_params__NEW_LINE__#addtheminhere.__NEW_LINE__request_params=self.request_params__NEW_LINE__forkey,valueinself.params.items():__NEW_LINE__#Python2only:keywordargumentsmustbebytestrings(type'str').__NEW_LINE__ifsys.version_info<(3,0):__NEW_LINE__ifisinstance(key,unicode):__NEW_LINE__key=key.encode('ISO-8859-1')__NEW_LINE____NEW_LINE__ifkeyinrequest_params:__NEW_LINE__ifnotisinstance(request_params[key],list):__NEW_LINE__request_params[key]=[request_params[key]]__NEW_LINE__request_params[key].append(value)__NEW_LINE__else:__NEW_LINE__request_params[key]=value"
+3521,"  def read(self, iprot):__NEW_LINE__    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:__NEW_LINE__      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))__NEW_LINE__      return__NEW_LINE__    iprot.readStructBegin()__NEW_LINE__    while True:__NEW_LINE__      (fname, ftype, fid) = iprot.readFieldBegin()__NEW_LINE__      if ftype == TType.STOP:__NEW_LINE__        break__NEW_LINE__      if fid == 1:__NEW_LINE__        if ftype == TType.STRING:__NEW_LINE__          self.dbname = iprot.readString();__NEW_LINE__        else:__NEW_LINE__          iprot.skip(ftype)__NEW_LINE__      elif fid == 2:__NEW_LINE__        if ftype == TType.STRING:__NEW_LINE__          self.name = iprot.readString();__NEW_LINE__        else:__NEW_LINE__          iprot.skip(ftype)__NEW_LINE__      elif fid == 3:__NEW_LINE__        if ftype == TType.BOOL:__NEW_LINE__          self.deleteData = iprot.readBool();__NEW_LINE__        else:__NEW_LINE__          iprot.skip(ftype)__NEW_LINE__      else:__NEW_LINE__        iprot.skip(ftype)__NEW_LINE__      iprot.readFieldEnd()__NEW_LINE__    iprot.readStructEnd()","def read(self, iprot):
+    if (
+        iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated
+        and isinstance(iprot.trans, TTransport.CReadableTransport)
+        and self.thrift_spec is not None
+        and fastbinary is not None
+    ):
+        fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+        return
+    iprot.readStructBegin()
+    while True:
+        (fname, ftype, fid) = iprot.readFieldBegin()
+        if ftype == TType.STOP:
+            break
+        if fid == 1:
+            if ftype == TType.STRING:
+                self.dbname = iprot.readString()
+            else:
+                iprot.skip(ftype)
+        elif fid == 2:
+            if ftype == TType.STRING:
+                self.name = iprot.readString()
+            else:
+                iprot.skip(ftype)
+        elif fid == 3:
+            if ftype == TType.BOOL:
+                self.deleteData = iprot.readBool()
+            else:
+                iprot.skip(ftype)
+        else:
+            iprot.skip(ftype)
+        iprot.readFieldEnd()
+    iprot.readStructEnd()
+","def read ( self , iprot ) : <TAB> if ( <TAB> <TAB> iprot . __class__ == TBinaryProtocol . TBinaryProtocolAccelerated <TAB> <TAB> and isinstance ( iprot . trans , TTransport . CReadableTransport ) <TAB> <TAB> and self . thrift_spec is not None <TAB> <TAB> and fastbinary is not None <TAB> ) : <TAB> <TAB> fastbinary . decode_binary ( self , iprot . trans , ( self . __class__ , self . thrift_spec ) ) <TAB> <TAB> return <TAB> iprot . readStructBegin ( ) <TAB> while True : <TAB> <TAB> ( fname , ftype , fid ) = iprot . readFieldBegin ( ) <TAB> <TAB> if ftype == TType . STOP : <TAB> <TAB> <TAB> break <TAB> <TAB> if fid == 1 : <TAB> <TAB> <TAB> if ftype == TType . STRING : <TAB> <TAB> <TAB> <TAB> self . dbname = iprot . readString ( ) <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> iprot . skip ( ftype ) <TAB> <TAB> elif fid == 2 : <TAB> <TAB> <TAB> if ftype == TType . STRING : <TAB> <TAB> <TAB> <TAB> self . name = iprot . readString ( ) <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> iprot . skip ( ftype ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> if ftype == TType . BOOL : <TAB> <TAB> <TAB> <TAB> self . deleteData = iprot . readBool ( ) <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> iprot . skip ( ftype ) <TAB> <TAB> else : <TAB> <TAB> <TAB> iprot . skip ( ftype ) <TAB> <TAB> iprot . readFieldEnd ( ) <TAB> iprot . readStructEnd ( )",elif fid == 3 :,373,"defread(self,iprot):__NEW_LINE__ifiprot.__class__==TBinaryProtocol.TBinaryProtocolAcceleratedandisinstance(iprot.trans,TTransport.CReadableTransport)andself.thrift_specisnotNoneandfastbinaryisnotNone:__NEW_LINE__fastbinary.decode_binary(self,iprot.trans,(self.__class__,self.thrift_spec))__NEW_LINE__return__NEW_LINE__iprot.readStructBegin()__NEW_LINE__whileTrue:__NEW_LINE__(fname,ftype,fid)=iprot.readFieldBegin()__NEW_LINE__ifftype==TType.STOP:__NEW_LINE__break__NEW_LINE__iffid==1:__NEW_LINE__ifftype==TType.STRING:__NEW_LINE__self.dbname=iprot.readString();__NEW_LINE__else:__NEW_LINE__iprot.skip(ftype)__NEW_LINE__eliffid==2:__NEW_LINE__ifftype==TType.STRING:__NEW_LINE__self.name=iprot.readString();__NEW_LINE__else:__NEW_LINE__iprot.skip(ftype)__NEW_LINE__eliffid==3:__NEW_LINE__ifftype==TType.BOOL:__NEW_LINE__self.deleteData=iprot.readBool();__NEW_LINE__else:__NEW_LINE__iprot.skip(ftype)__NEW_LINE__else:__NEW_LINE__iprot.skip(ftype)__NEW_LINE__iprot.readFieldEnd()__NEW_LINE__iprot.readStructEnd()"
+19601,"  def _setup_layer(self, trainable=False, **kwargs):__NEW_LINE__    """"""Constructs keras layer with relevant weights and losses.""""""__NEW_LINE__    # Initialize an empty layer, then add_weight() etc. as needed.__NEW_LINE__    super(KerasLayer, self).__init__(trainable=trainable, **kwargs)__NEW_LINE____NEW_LINE__    # Add trainable and non-trainable weights from the callable.__NEW_LINE__    if hasattr(self._func, ""trainable_variables""):__NEW_LINE__      for v in self._func.trainable_variables:__NEW_LINE__        self._add_existing_weight(v, trainable=True)__NEW_LINE__      trainable_variables = {id(v) for v in self._func.trainable_variables}__NEW_LINE__    else:__NEW_LINE__      trainable_variables = set()__NEW_LINE__    if hasattr(self._func, ""variables""):__NEW_LINE__      for v in self._func.variables:__NEW_LINE__        if id(v) not in trainable_variables:__NEW_LINE__          self._add_existing_weight(v, trainable=False)__NEW_LINE____NEW_LINE__    # Forward the callable's regularization losses (if any).__NEW_LINE__    if hasattr(self._func, ""regularization_losses""):__NEW_LINE__      for l in self._func.regularization_losses:__NEW_LINE__        if not callable(l):__NEW_LINE__          raise ValueError(__NEW_LINE__              ""hub.KerasLayer(obj) expects obj.regularization_losses to be an ""__NEW_LINE__              ""iterable of callables, each returning a scalar loss term."")__NEW_LINE__        self.add_loss(self._call_loss_if_trainable(l))  # Supports callables.","def _setup_layer(self, trainable=False, **kwargs):
+    """"""Constructs keras layer with relevant weights and losses.""""""
+    # Initialize an empty layer, then add_weight() etc. as needed.
+    super(KerasLayer, self).__init__(trainable=trainable, **kwargs)
+    # Add trainable and non-trainable weights from the callable.
+    if hasattr(self._func, ""trainable_variables""):
+        for v in self._func.trainable_variables:
+            self._add_existing_weight(v, trainable=True)
+        trainable_variables = {id(v) for v in self._func.trainable_variables}
+    else:
+        trainable_variables = set()
+    if hasattr(self._func, ""variables""):
+        for v in self._func.variables:
+            if id(v) not in trainable_variables:
+                self._add_existing_weight(v, trainable=False)
+    # Forward the callable's regularization losses (if any).
+    if hasattr(self._func, ""regularization_losses""):
+        for l in self._func.regularization_losses:
+            if not callable(l):
+                raise ValueError(
+                    ""hub.KerasLayer(obj) expects obj.regularization_losses to be an ""
+                    ""iterable of callables, each returning a scalar loss term.""
+                )
+            self.add_loss(self._call_loss_if_trainable(l))  # Supports callables.
+","def _setup_layer ( self , trainable = False , ** kwargs ) : <TAB> """"""Constructs keras layer with relevant weights and losses."""""" <TAB> <TAB> super ( KerasLayer , self ) . __init__ ( trainable = trainable , ** kwargs ) <TAB> <TAB> if hasattr ( self . _func , ""trainable_variables"" ) : <TAB> <TAB> for v in self . _func . trainable_variables : <TAB> <TAB> <TAB> self . _add_existing_weight ( v , trainable = True ) <TAB> <TAB> trainable_variables = { id ( v ) for v in self . _func . trainable_variables } <TAB> else : <TAB> <TAB> trainable_variables = set ( ) <TAB> if hasattr ( self . _func , ""variables"" ) : <TAB> <TAB> for v in self . _func . variables : <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> self . _add_existing_weight ( v , trainable = False ) <TAB> <TAB> if hasattr ( self . _func , ""regularization_losses"" ) : <TAB> <TAB> for l in self . _func . regularization_losses : <TAB> <TAB> <TAB> if not callable ( l ) : <TAB> <TAB> <TAB> <TAB> raise ValueError ( <TAB> <TAB> <TAB> <TAB> <TAB> ""hub.KerasLayer(obj) expects obj.regularization_losses to be an "" <TAB> <TAB> <TAB> <TAB> <TAB> ""iterable of callables, each returning a scalar loss term."" <TAB> <TAB> <TAB> <TAB> ) <TAB> <TAB> <TAB> self . add_loss ( self . _call_loss_if_trainable ( l ) )",if id ( v ) not in trainable_variables :,352,"def_setup_layer(self,trainable=False,**kwargs):__NEW_LINE__""""""Constructskeraslayerwithrelevantweightsandlosses.""""""__NEW_LINE__#Initializeanemptylayer,thenadd_weight()etc.asneeded.__NEW_LINE__super(KerasLayer,self).__init__(trainable=trainable,**kwargs)__NEW_LINE____NEW_LINE__#Addtrainableandnon-trainableweightsfromthecallable.__NEW_LINE__ifhasattr(self._func,""trainable_variables""):__NEW_LINE__forvinself._func.trainable_variables:__NEW_LINE__self._add_existing_weight(v,trainable=True)__NEW_LINE__trainable_variables={id(v)forvinself._func.trainable_variables}__NEW_LINE__else:__NEW_LINE__trainable_variables=set()__NEW_LINE__ifhasattr(self._func,""variables""):__NEW_LINE__forvinself._func.variables:__NEW_LINE__ifid(v)notintrainable_variables:__NEW_LINE__self._add_existing_weight(v,trainable=False)__NEW_LINE____NEW_LINE__#Forwardthecallable'sregularizationlosses(ifany).__NEW_LINE__ifhasattr(self._func,""regularization_losses""):__NEW_LINE__forlinself._func.regularization_losses:__NEW_LINE__ifnotcallable(l):__NEW_LINE__raiseValueError(__NEW_LINE__""hub.KerasLayer(obj)expectsobj.regularization_lossestobean""__NEW_LINE__""iterableofcallables,eachreturningascalarlossterm."")__NEW_LINE__self.add_loss(self._call_loss_if_trainable(l))#Supportscallables."
+10492,"    def bind(self, sock, path):__NEW_LINE__        # Bind the socket__NEW_LINE__        try:__NEW_LINE__            sock.bind(path)__NEW_LINE__        except OSError as e:__NEW_LINE__            if str(e) == ""AF_UNIX path too long"":__NEW_LINE__                self.skipTest(__NEW_LINE__                    ""Pathname {0!a} is too long to serve as a AF_UNIX path""__NEW_LINE__                    .format(path))__NEW_LINE__            else:__NEW_LINE__                raise","def bind(self, sock, path):
+    # Bind the socket
+    try:
+        sock.bind(path)
+    except OSError as e:
+        if str(e) == ""AF_UNIX path too long"":
+            self.skipTest(
+                ""Pathname {0!a} is too long to serve as a AF_UNIX path"".format(path)
+            )
+        else:
+            raise
+","def bind ( self , sock , path ) : <TAB> <TAB> try : <TAB> <TAB> sock . bind ( path ) <TAB> except OSError as e : <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> self . skipTest ( <TAB> <TAB> <TAB> <TAB> ""Pathname {0!a} is too long to serve as a AF_UNIX path"" . format ( path ) <TAB> <TAB> <TAB> ) <TAB> <TAB> else : <TAB> <TAB> <TAB> raise","if str ( e ) == ""AF_UNIX path too long"" :",106,"defbind(self,sock,path):__NEW_LINE__#Bindthesocket__NEW_LINE__try:__NEW_LINE__sock.bind(path)__NEW_LINE__exceptOSErrorase:__NEW_LINE__ifstr(e)==""AF_UNIXpathtoolong"":__NEW_LINE__self.skipTest(__NEW_LINE__""Pathname{0!a}istoolongtoserveasaAF_UNIXpath""__NEW_LINE__.format(path))__NEW_LINE__else:__NEW_LINE__raise"
+8808,"    def findall(self, s):__NEW_LINE__        res = []__NEW_LINE__        start = 0__NEW_LINE__        while True:__NEW_LINE__            m = self.search(s, start)__NEW_LINE__            if not m:__NEW_LINE__                return res__NEW_LINE__            if m.num == 1:__NEW_LINE__                res.append(m.group(0))__NEW_LINE__            elif m.num == 2:__NEW_LINE__                res.append(m.group(1))__NEW_LINE__            else:__NEW_LINE__                res.append(m.groups())__NEW_LINE__            beg, end = m.span(0)__NEW_LINE__            start = end","def findall(self, s):
+    res = []
+    start = 0
+    while True:
+        m = self.search(s, start)
+        if not m:
+            return res
+        if m.num == 1:
+            res.append(m.group(0))
+        elif m.num == 2:
+            res.append(m.group(1))
+        else:
+            res.append(m.groups())
+        beg, end = m.span(0)
+        start = end
+","def findall ( self , s ) : <TAB> res = [ ] <TAB> start = 0 <TAB> while True : <TAB> <TAB> m = self . search ( s , start ) <TAB> <TAB> if not m : <TAB> <TAB> <TAB> return res <TAB> <TAB> if m . num == 1 : <TAB> <TAB> <TAB> res . append ( m . group ( 0 ) ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> res . append ( m . group ( 1 ) ) <TAB> <TAB> else : <TAB> <TAB> <TAB> res . append ( m . groups ( ) ) <TAB> <TAB> beg , end = m . span ( 0 ) <TAB> <TAB> start = end",elif m . num == 2 :,134,"deffindall(self,s):__NEW_LINE__res=[]__NEW_LINE__start=0__NEW_LINE__whileTrue:__NEW_LINE__m=self.search(s,start)__NEW_LINE__ifnotm:__NEW_LINE__returnres__NEW_LINE__ifm.num==1:__NEW_LINE__res.append(m.group(0))__NEW_LINE__elifm.num==2:__NEW_LINE__res.append(m.group(1))__NEW_LINE__else:__NEW_LINE__res.append(m.groups())__NEW_LINE__beg,end=m.span(0)__NEW_LINE__start=end"
+12405,"    def encode(self):__NEW_LINE__        e = self.expr__NEW_LINE__        if e in self.reg_info.expr:__NEW_LINE__            self.parent.a_d.value = 0__NEW_LINE__            self.value = self.reg_info.expr.index(e)__NEW_LINE__        elif isinstance(e, ExprMem):__NEW_LINE__            if isinstance(e.ptr, ExprId):__NEW_LINE__                r, i = e.ptr, ExprInt(0, 16)__NEW_LINE__            elif isinstance(e.ptr, ExprOp):__NEW_LINE__                r, i = e.ptr.args[0], e.ptr.args[1]__NEW_LINE__            elif isinstance(e.ptr, ExprInt):__NEW_LINE__                r, i = SR, e.ptr__NEW_LINE__            else:__NEW_LINE__                raise NotImplementedError(__NEW_LINE__                    'unknown instance e.arg = %s' % type(e.ptr))__NEW_LINE__            self.parent.a_d.value = 1__NEW_LINE__            self.value = self.reg_info.expr.index(r)__NEW_LINE__            self.parent.off_d.value = int(i)__NEW_LINE__        else:__NEW_LINE__            raise NotImplementedError('unknown instance e = %s' % type(e))__NEW_LINE__        return True","def encode(self):
+    e = self.expr
+    if e in self.reg_info.expr:
+        self.parent.a_d.value = 0
+        self.value = self.reg_info.expr.index(e)
+    elif isinstance(e, ExprMem):
+        if isinstance(e.ptr, ExprId):
+            r, i = e.ptr, ExprInt(0, 16)
+        elif isinstance(e.ptr, ExprOp):
+            r, i = e.ptr.args[0], e.ptr.args[1]
+        elif isinstance(e.ptr, ExprInt):
+            r, i = SR, e.ptr
+        else:
+            raise NotImplementedError(""unknown instance e.arg = %s"" % type(e.ptr))
+        self.parent.a_d.value = 1
+        self.value = self.reg_info.expr.index(r)
+        self.parent.off_d.value = int(i)
+    else:
+        raise NotImplementedError(""unknown instance e = %s"" % type(e))
+    return True
+","def encode ( self ) : <TAB> e = self . expr <TAB> if e in self . reg_info . expr : <TAB> <TAB> self . parent . a_d . value = 0 <TAB> <TAB> self . value = self . reg_info . expr . index ( e ) <TAB> elif isinstance ( e , ExprMem ) : <TAB> <TAB> if isinstance ( e . ptr , ExprId ) : <TAB> <TAB> <TAB> r , i = e . ptr , ExprInt ( 0 , 16 ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> r , i = e . ptr . args [ 0 ] , e . ptr . args [ 1 ] <TAB> <TAB> elif isinstance ( e . ptr , ExprInt ) : <TAB> <TAB> <TAB> r , i = SR , e . ptr <TAB> <TAB> else : <TAB> <TAB> <TAB> raise NotImplementedError ( ""unknown instance e.arg = %s"" % type ( e . ptr ) ) <TAB> <TAB> self . parent . a_d . value = 1 <TAB> <TAB> self . value = self . reg_info . expr . index ( r ) <TAB> <TAB> self . parent . off_d . value = int ( i ) <TAB> else : <TAB> <TAB> raise NotImplementedError ( ""unknown instance e = %s"" % type ( e ) ) <TAB> return True","elif isinstance ( e . ptr , ExprOp ) :",274,"defencode(self):__NEW_LINE__e=self.expr__NEW_LINE__ifeinself.reg_info.expr:__NEW_LINE__self.parent.a_d.value=0__NEW_LINE__self.value=self.reg_info.expr.index(e)__NEW_LINE__elifisinstance(e,ExprMem):__NEW_LINE__ifisinstance(e.ptr,ExprId):__NEW_LINE__r,i=e.ptr,ExprInt(0,16)__NEW_LINE__elifisinstance(e.ptr,ExprOp):__NEW_LINE__r,i=e.ptr.args[0],e.ptr.args[1]__NEW_LINE__elifisinstance(e.ptr,ExprInt):__NEW_LINE__r,i=SR,e.ptr__NEW_LINE__else:__NEW_LINE__raiseNotImplementedError(__NEW_LINE__'unknowninstancee.arg=%s'%type(e.ptr))__NEW_LINE__self.parent.a_d.value=1__NEW_LINE__self.value=self.reg_info.expr.index(r)__NEW_LINE__self.parent.off_d.value=int(i)__NEW_LINE__else:__NEW_LINE__raiseNotImplementedError('unknowninstancee=%s'%type(e))__NEW_LINE__returnTrue"
+5623,"    def resolve_account(self, account_name):__NEW_LINE__        account = None__NEW_LINE____NEW_LINE__        if isinstance(account_name, (int, float)):  # TODO: what if it's string ""123""?__NEW_LINE__            acc_id = int(account_name)__NEW_LINE__            self.log.debug(""Treating account name as ID: %s"", acc_id)__NEW_LINE__            account = self.user.accounts(ident=acc_id).first()__NEW_LINE__            if not account:__NEW_LINE__                raise TaurusConfigError(""BlazeMeter account not found by ID: %s"" % acc_id)__NEW_LINE__        elif account_name:__NEW_LINE__            account = self.user.accounts(name=account_name).first()__NEW_LINE__            if not account:__NEW_LINE__                raise TaurusConfigError(""BlazeMeter account not found by name: %s"" % account_name)__NEW_LINE____NEW_LINE__        if account:__NEW_LINE__            return account__NEW_LINE____NEW_LINE__        self.user.fetch()__NEW_LINE__        account = self.user.accounts(ident=self.user['defaultProject']['accountId']).first()__NEW_LINE__        self.log.debug(""Using default account: %s"", account)__NEW_LINE__        return account","def resolve_account(self, account_name):
+    account = None
+    if isinstance(account_name, (int, float)):  # TODO: what if it's string ""123""?
+        acc_id = int(account_name)
+        self.log.debug(""Treating account name as ID: %s"", acc_id)
+        account = self.user.accounts(ident=acc_id).first()
+        if not account:
+            raise TaurusConfigError(""BlazeMeter account not found by ID: %s"" % acc_id)
+    elif account_name:
+        account = self.user.accounts(name=account_name).first()
+        if not account:
+            raise TaurusConfigError(
+                ""BlazeMeter account not found by name: %s"" % account_name
+            )
+    if account:
+        return account
+    self.user.fetch()
+    account = self.user.accounts(ident=self.user[""defaultProject""][""accountId""]).first()
+    self.log.debug(""Using default account: %s"", account)
+    return account
+","def resolve_account ( self , account_name ) : <TAB> account = None <TAB> if isinstance ( account_name , ( int , float ) ) : <TAB> <TAB> acc_id = int ( account_name ) <TAB> <TAB> self . log . debug ( ""Treating account name as ID: %s"" , acc_id ) <TAB> <TAB> account = self . user . accounts ( ident = acc_id ) . first ( ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> raise TaurusConfigError ( ""BlazeMeter account not found by ID: %s"" % acc_id ) <TAB> elif account_name : <TAB> <TAB> account = self . user . accounts ( name = account_name ) . first ( ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> raise TaurusConfigError ( <TAB> <TAB> <TAB> <TAB> ""BlazeMeter account not found by name: %s"" % account_name <TAB> <TAB> <TAB> ) <TAB> if account : <TAB> <TAB> return account <TAB> self . user . fetch ( ) <TAB> account = self . user . accounts ( ident = self . user [ ""defaultProject"" ] [ ""accountId"" ] ) . first ( ) <TAB> self . log . debug ( ""Using default account: %s"" , account ) <TAB> return account",if not account :,269,"defresolve_account(self,account_name):__NEW_LINE__account=None__NEW_LINE____NEW_LINE__ifisinstance(account_name,(int,float)):#TODO:whatifit'sstring""123""?__NEW_LINE__acc_id=int(account_name)__NEW_LINE__self.log.debug(""TreatingaccountnameasID:%s"",acc_id)__NEW_LINE__account=self.user.accounts(ident=acc_id).first()__NEW_LINE__ifnotaccount:__NEW_LINE__raiseTaurusConfigError(""BlazeMeteraccountnotfoundbyID:%s""%acc_id)__NEW_LINE__elifaccount_name:__NEW_LINE__account=self.user.accounts(name=account_name).first()__NEW_LINE__ifnotaccount:__NEW_LINE__raiseTaurusConfigError(""BlazeMeteraccountnotfoundbyname:%s""%account_name)__NEW_LINE____NEW_LINE__ifaccount:__NEW_LINE__returnaccount__NEW_LINE____NEW_LINE__self.user.fetch()__NEW_LINE__account=self.user.accounts(ident=self.user['defaultProject']['accountId']).first()__NEW_LINE__self.log.debug(""Usingdefaultaccount:%s"",account)__NEW_LINE__returnaccount"
+16357,"def read_embeddings(file_enc, skip_lines=0, filter_set=None):__NEW_LINE__    embs = dict()__NEW_LINE__    total_vectors_in_file = 0__NEW_LINE__    with open(file_enc, 'rb') as f:__NEW_LINE__        for i, line in enumerate(f):__NEW_LINE__            if i < skip_lines:__NEW_LINE__                continue__NEW_LINE__            if not line:__NEW_LINE__                break__NEW_LINE__            if len(line) == 0:__NEW_LINE__                # is this reachable?__NEW_LINE__                continue__NEW_LINE____NEW_LINE__            l_split = line.decode('utf8').strip().split(' ')__NEW_LINE__            if len(l_split) == 2:__NEW_LINE__                continue__NEW_LINE__            total_vectors_in_file += 1__NEW_LINE__            if filter_set is not None and l_split[0] not in filter_set:__NEW_LINE__                continue__NEW_LINE__            embs[l_split[0]] = [float(em) for em in l_split[1:]]__NEW_LINE__    return embs, total_vectors_in_file","def read_embeddings(file_enc, skip_lines=0, filter_set=None):
+    embs = dict()
+    total_vectors_in_file = 0
+    with open(file_enc, ""rb"") as f:
+        for i, line in enumerate(f):
+            if i < skip_lines:
+                continue
+            if not line:
+                break
+            if len(line) == 0:
+                # is this reachable?
+                continue
+            l_split = line.decode(""utf8"").strip().split("" "")
+            if len(l_split) == 2:
+                continue
+            total_vectors_in_file += 1
+            if filter_set is not None and l_split[0] not in filter_set:
+                continue
+            embs[l_split[0]] = [float(em) for em in l_split[1:]]
+    return embs, total_vectors_in_file
+","def read_embeddings ( file_enc , skip_lines = 0 , filter_set = None ) : <TAB> embs = dict ( ) <TAB> total_vectors_in_file = 0 <TAB> with open ( file_enc , ""rb"" ) as f : <TAB> <TAB> for i , line in enumerate ( f ) : <TAB> <TAB> <TAB> if i < skip_lines : <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> if not line : <TAB> <TAB> <TAB> <TAB> break <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> l_split = line . decode ( ""utf8"" ) . strip ( ) . split ( "" "" ) <TAB> <TAB> <TAB> if len ( l_split ) == 2 : <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> total_vectors_in_file += 1 <TAB> <TAB> <TAB> if filter_set is not None and l_split [ 0 ] not in filter_set : <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> embs [ l_split [ 0 ] ] = [ float ( em ) for em in l_split [ 1 : ] ] <TAB> return embs , total_vectors_in_file",if len ( line ) == 0 :,247,"defread_embeddings(file_enc,skip_lines=0,filter_set=None):__NEW_LINE__embs=dict()__NEW_LINE__total_vectors_in_file=0__NEW_LINE__withopen(file_enc,'rb')asf:__NEW_LINE__fori,lineinenumerate(f):__NEW_LINE__ifi<skip_lines:__NEW_LINE__continue__NEW_LINE__ifnotline:__NEW_LINE__break__NEW_LINE__iflen(line)==0:__NEW_LINE__#isthisreachable?__NEW_LINE__continue__NEW_LINE____NEW_LINE__l_split=line.decode('utf8').strip().split('')__NEW_LINE__iflen(l_split)==2:__NEW_LINE__continue__NEW_LINE__total_vectors_in_file+=1__NEW_LINE__iffilter_setisnotNoneandl_split[0]notinfilter_set:__NEW_LINE__continue__NEW_LINE__embs[l_split[0]]=[float(em)foreminl_split[1:]]__NEW_LINE__returnembs,total_vectors_in_file"
+2076,"def config_dict(filename):__NEW_LINE__    """"""Convert content of config-file into dictionary.""""""__NEW_LINE__    with open(filename, ""r"") as f:__NEW_LINE__        cfglines = f.readlines()__NEW_LINE__    cfgdict = {}__NEW_LINE__    for line in cfglines:__NEW_LINE__        line = line.strip()__NEW_LINE__        if not line or line.startswith(""#""):__NEW_LINE__            continue__NEW_LINE__        try:__NEW_LINE__            key, value = line.split(""="")__NEW_LINE__        except ValueError:__NEW_LINE__            print(""Bad line in config-file %s:\n%s"" % (filename,line))__NEW_LINE__            continue__NEW_LINE__        key = key.strip()__NEW_LINE__        value = value.strip()__NEW_LINE__        if value in [""True"", ""False"", ""None"", ""''"", '""""']:__NEW_LINE__            value = eval(value)__NEW_LINE__        else:__NEW_LINE__            try:__NEW_LINE__                if ""."" in value:__NEW_LINE__                    value = float(value)__NEW_LINE__                else:__NEW_LINE__                    value = int(value)__NEW_LINE__            except ValueError:__NEW_LINE__                pass # value need not be converted__NEW_LINE__        cfgdict[key] = value__NEW_LINE__    return cfgdict","def config_dict(filename):
+    """"""Convert content of config-file into dictionary.""""""
+    with open(filename, ""r"") as f:
+        cfglines = f.readlines()
+    cfgdict = {}
+    for line in cfglines:
+        line = line.strip()
+        if not line or line.startswith(""#""):
+            continue
+        try:
+            key, value = line.split(""="")
+        except ValueError:
+            print(""Bad line in config-file %s:\n%s"" % (filename, line))
+            continue
+        key = key.strip()
+        value = value.strip()
+        if value in [""True"", ""False"", ""None"", ""''"", '""""']:
+            value = eval(value)
+        else:
+            try:
+                if ""."" in value:
+                    value = float(value)
+                else:
+                    value = int(value)
+            except ValueError:
+                pass  # value need not be converted
+        cfgdict[key] = value
+    return cfgdict
+","def config_dict ( filename ) : <TAB> """"""Convert content of config-file into dictionary."""""" <TAB> with open ( filename , ""r"" ) as f : <TAB> <TAB> cfglines = f . readlines ( ) <TAB> cfgdict = { } <TAB> for line in cfglines : <TAB> <TAB> line = line . strip ( ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> continue <TAB> <TAB> try : <TAB> <TAB> <TAB> key , value = line . split ( ""="" ) <TAB> <TAB> except ValueError : <TAB> <TAB> <TAB> print ( ""Bad line in config-file %s:\n%s"" % ( filename , line ) ) <TAB> <TAB> <TAB> continue <TAB> <TAB> key = key . strip ( ) <TAB> <TAB> value = value . strip ( ) <TAB> <TAB> if value in [ ""True"" , ""False"" , ""None"" , ""''"" , '""""' ] : <TAB> <TAB> <TAB> value = eval ( value ) <TAB> <TAB> else : <TAB> <TAB> <TAB> try : <TAB> <TAB> <TAB> <TAB> if ""."" in value : <TAB> <TAB> <TAB> <TAB> <TAB> value = float ( value ) <TAB> <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> <TAB> value = int ( value ) <TAB> <TAB> <TAB> except ValueError : <TAB> <TAB> <TAB> <TAB> pass <TAB> <TAB> cfgdict [ key ] = value <TAB> return cfgdict","if not line or line . startswith ( ""#"" ) :",269,"defconfig_dict(filename):__NEW_LINE__""""""Convertcontentofconfig-fileintodictionary.""""""__NEW_LINE__withopen(filename,""r"")asf:__NEW_LINE__cfglines=f.readlines()__NEW_LINE__cfgdict={}__NEW_LINE__forlineincfglines:__NEW_LINE__line=line.strip()__NEW_LINE__ifnotlineorline.startswith(""#""):__NEW_LINE__continue__NEW_LINE__try:__NEW_LINE__key,value=line.split(""="")__NEW_LINE__exceptValueError:__NEW_LINE__print(""Badlineinconfig-file%s:\n%s""%(filename,line))__NEW_LINE__continue__NEW_LINE__key=key.strip()__NEW_LINE__value=value.strip()__NEW_LINE__ifvaluein[""True"",""False"",""None"",""''"",'""""']:__NEW_LINE__value=eval(value)__NEW_LINE__else:__NEW_LINE__try:__NEW_LINE__if"".""invalue:__NEW_LINE__value=float(value)__NEW_LINE__else:__NEW_LINE__value=int(value)__NEW_LINE__exceptValueError:__NEW_LINE__pass#valueneednotbeconverted__NEW_LINE__cfgdict[key]=value__NEW_LINE__returncfgdict"
+21730,"def gen_colinfo(data):__NEW_LINE__    colinfo = {'pid': 0}__NEW_LINE__    for pid in data:__NEW_LINE__        pid_len = len(str(pid))__NEW_LINE__        if colinfo['pid'] < pid_len:__NEW_LINE__            colinfo['pid'] = pid_len__NEW_LINE__        for column in data[pid]:__NEW_LINE__            if '_percent' in column:__NEW_LINE__                colinfo[column] = 4__NEW_LINE__                continue__NEW_LINE__            if type(data[pid][column]) not in (str,unicode,int,float):__NEW_LINE__                continue__NEW_LINE____NEW_LINE__            #fix ascii encode errors__NEW_LINE__            if type(data[pid][column]) == unicode:__NEW_LINE__                data[pid][column]=data[pid][column].encode('utf8', 'replace')__NEW_LINE____NEW_LINE__            pid_len = len(str(data[pid][column]))__NEW_LINE__            if column not in colinfo:__NEW_LINE__                colinfo[column] = pid_len__NEW_LINE__            else:__NEW_LINE__                if colinfo[column] < pid_len:__NEW_LINE__                    colinfo[column] = pid_len__NEW_LINE____NEW_LINE__    return colinfo","def gen_colinfo(data):
+    colinfo = {""pid"": 0}
+    for pid in data:
+        pid_len = len(str(pid))
+        if colinfo[""pid""] < pid_len:
+            colinfo[""pid""] = pid_len
+        for column in data[pid]:
+            if ""_percent"" in column:
+                colinfo[column] = 4
+                continue
+            if type(data[pid][column]) not in (str, unicode, int, float):
+                continue
+            # fix ascii encode errors
+            if type(data[pid][column]) == unicode:
+                data[pid][column] = data[pid][column].encode(""utf8"", ""replace"")
+            pid_len = len(str(data[pid][column]))
+            if column not in colinfo:
+                colinfo[column] = pid_len
+            else:
+                if colinfo[column] < pid_len:
+                    colinfo[column] = pid_len
+    return colinfo
+","def gen_colinfo ( data ) : <TAB> colinfo = { ""pid"" : 0 } <TAB> for pid in data : <TAB> <TAB> pid_len = len ( str ( pid ) ) <TAB> <TAB> if colinfo [ ""pid"" ] < pid_len : <TAB> <TAB> <TAB> colinfo [ ""pid"" ] = pid_len <TAB> <TAB> for column in data [ pid ] : <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> colinfo [ column ] = 4 <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> if type ( data [ pid ] [ column ] ) not in ( str , unicode , int , float ) : <TAB> <TAB> <TAB> <TAB> continue <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> if type ( data [ pid ] [ column ] ) == unicode : <TAB> <TAB> <TAB> <TAB> data [ pid ] [ column ] = data [ pid ] [ column ] . encode ( ""utf8"" , ""replace"" ) <TAB> <TAB> <TAB> pid_len = len ( str ( data [ pid ] [ column ] ) ) <TAB> <TAB> <TAB> if column not in colinfo : <TAB> <TAB> <TAB> <TAB> colinfo [ column ] = pid_len <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> if colinfo [ column ] < pid_len : <TAB> <TAB> <TAB> <TAB> <TAB> colinfo [ column ] = pid_len <TAB> return colinfo","if ""_percent"" in column :",271,"defgen_colinfo(data):__NEW_LINE__colinfo={'pid':0}__NEW_LINE__forpidindata:__NEW_LINE__pid_len=len(str(pid))__NEW_LINE__ifcolinfo['pid']<pid_len:__NEW_LINE__colinfo['pid']=pid_len__NEW_LINE__forcolumnindata[pid]:__NEW_LINE__if'_percent'incolumn:__NEW_LINE__colinfo[column]=4__NEW_LINE__continue__NEW_LINE__iftype(data[pid][column])notin(str,unicode,int,float):__NEW_LINE__continue__NEW_LINE____NEW_LINE__#fixasciiencodeerrors__NEW_LINE__iftype(data[pid][column])==unicode:__NEW_LINE__data[pid][column]=data[pid][column].encode('utf8','replace')__NEW_LINE____NEW_LINE__pid_len=len(str(data[pid][column]))__NEW_LINE__ifcolumnnotincolinfo:__NEW_LINE__colinfo[column]=pid_len__NEW_LINE__else:__NEW_LINE__ifcolinfo[column]<pid_len:__NEW_LINE__colinfo[column]=pid_len__NEW_LINE____NEW_LINE__returncolinfo"
+21087,"def readline(_size=-1, prompt='', float=True, priority=10):__NEW_LINE__    # The argument  _size is unused, but is there for compatibility__NEW_LINE__    # with the existing readline__NEW_LINE____NEW_LINE__    global buffer_handle, prompt_handle, suggest_handle, eof, \__NEW_LINE__        show_suggestions__NEW_LINE____NEW_LINE__    # XXX circular imports__NEW_LINE__    from pwnlib.term import term_mode__NEW_LINE__    if not term_mode:__NEW_LINE__        six.print_(prompt, end='', flush=True)__NEW_LINE__        return getattr(sys.stdin, 'buffer', sys.stdin).readline(_size).rstrip(b'\n')__NEW_LINE__    show_suggestions = False__NEW_LINE__    eof = False__NEW_LINE__    if prompt:__NEW_LINE__        prompt_handle = term.output(prompt, float = float, priority = priority)__NEW_LINE__    else:__NEW_LINE__        prompt_handle = None__NEW_LINE__    buffer_handle = term.output(float = float, priority = priority)__NEW_LINE__    suggest_handle = None__NEW_LINE__    clear()__NEW_LINE__    if startup_hook:__NEW_LINE__        startup_hook()__NEW_LINE__    try:__NEW_LINE__        while True:__NEW_LINE__            try:__NEW_LINE__                try:__NEW_LINE__                    keymap.handle_input()__NEW_LINE__                except EOFError:__NEW_LINE__                    if len(buffer_left + buffer_right) == 0:__NEW_LINE__                        return b''__NEW_LINE__                if eof:__NEW_LINE__                    return b''__NEW_LINE__                else:__NEW_LINE__                    buffer = (buffer_left + buffer_right)__NEW_LINE__                    if buffer:__NEW_LINE__                        history.insert(0, buffer)__NEW_LINE__                    return force_to_bytes(buffer) + b'\n'__NEW_LINE__            except KeyboardInterrupt:__NEW_LINE__                control_c()__NEW_LINE__    finally:__NEW_LINE__        line = buffer_left + buffer_right + '\n'__NEW_LINE__        buffer_handle.update(line)__NEW_LINE__        buffer_handle.freeze()__NEW_LINE__        buffer_handle = None__NEW_LINE__        if prompt_handle:__NEW_LINE__            prompt_handle.freeze()__NEW_LINE__            prompt_handle = None__NEW_LINE__        if suggest_handle:__NEW_LINE__            suggest_handle.freeze()__NEW_LINE__            suggest_handle = None__NEW_LINE__        if shutdown_hook:__NEW_LINE__            shutdown_hook()","def readline(_size=-1, prompt="""", float=True, priority=10):
+    # The argument  _size is unused, but is there for compatibility
+    # with the existing readline
+    global buffer_handle, prompt_handle, suggest_handle, eof, show_suggestions
+    # XXX circular imports
+    from pwnlib.term import term_mode
+    if not term_mode:
+        six.print_(prompt, end="""", flush=True)
+        return getattr(sys.stdin, ""buffer"", sys.stdin).readline(_size).rstrip(b""\n"")
+    show_suggestions = False
+    eof = False
+    if prompt:
+        prompt_handle = term.output(prompt, float=float, priority=priority)
+    else:
+        prompt_handle = None
+    buffer_handle = term.output(float=float, priority=priority)
+    suggest_handle = None
+    clear()
+    if startup_hook:
+        startup_hook()
+    try:
+        while True:
+            try:
+                try:
+                    keymap.handle_input()
+                except EOFError:
+                    if len(buffer_left + buffer_right) == 0:
+                        return b""""
+                if eof:
+                    return b""""
+                else:
+                    buffer = buffer_left + buffer_right
+                    if buffer:
+                        history.insert(0, buffer)
+                    return force_to_bytes(buffer) + b""\n""
+            except KeyboardInterrupt:
+                control_c()
+    finally:
+        line = buffer_left + buffer_right + ""\n""
+        buffer_handle.update(line)
+        buffer_handle.freeze()
+        buffer_handle = None
+        if prompt_handle:
+            prompt_handle.freeze()
+            prompt_handle = None
+        if suggest_handle:
+            suggest_handle.freeze()
+            suggest_handle = None
+        if shutdown_hook:
+            shutdown_hook()
+","def readline ( _size = - 1 , prompt = """" , float = True , priority = 10 ) : <TAB> <TAB> <TAB> global buffer_handle , prompt_handle , suggest_handle , eof , show_suggestions <TAB> <TAB> from pwnlib . term import term_mode <TAB> if not term_mode : <TAB> <TAB> six . print_ ( prompt , end = """" , flush = True ) <TAB> <TAB> return getattr ( sys . stdin , ""buffer"" , sys . stdin ) . readline ( _size ) . rstrip ( b""\n"" ) <TAB> show_suggestions = False <TAB> eof = False <TAB> if prompt : <TAB> <TAB> prompt_handle = term . output ( prompt , float = float , priority = priority ) <TAB> else : <TAB> <TAB> prompt_handle = None <TAB> buffer_handle = term . output ( float = float , priority = priority ) <TAB> suggest_handle = None <TAB> clear ( ) <TAB> if startup_hook : <TAB> <TAB> startup_hook ( ) <TAB> try : <TAB> <TAB> while True : <TAB> <TAB> <TAB> try : <TAB> <TAB> <TAB> <TAB> try : <TAB> <TAB> <TAB> <TAB> <TAB> keymap . handle_input ( ) <TAB> <TAB> <TAB> <TAB> except EOFError : <TAB> <TAB> <TAB> <TAB> <TAB> if len ( buffer_left + buffer_right ) == 0 : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> return b"""" <TAB> <TAB> <TAB> <TAB> if eof : <TAB> <TAB> <TAB> <TAB> <TAB> return b"""" <TAB> <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> <TAB> buffer = buffer_left + buffer_right <TAB> <TAB> <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> history . insert ( 0 , buffer ) <TAB> <TAB> <TAB> <TAB> <TAB> return force_to_bytes ( buffer ) + b""\n"" <TAB> <TAB> <TAB> except KeyboardInterrupt : <TAB> <TAB> <TAB> <TAB> control_c ( ) <TAB> finally : <TAB> <TAB> line = buffer_left + buffer_right + ""\n"" <TAB> <TAB> buffer_handle . update ( line ) <TAB> <TAB> buffer_handle . freeze ( ) <TAB> <TAB> buffer_handle = None <TAB> <TAB> if prompt_handle : <TAB> <TAB> <TAB> prompt_handle . freeze ( ) <TAB> <TAB> <TAB> prompt_handle = None <TAB> <TAB> if suggest_handle : <TAB> <TAB> <TAB> suggest_handle . freeze ( ) <TAB> <TAB> <TAB> suggest_handle = None <TAB> <TAB> if shutdown_hook : <TAB> <TAB> <TAB> shutdown_hook ( )",if buffer :,512,"defreadline(_size=-1,prompt='',float=True,priority=10):__NEW_LINE__#Theargument_sizeisunused,butisthereforcompatibility__NEW_LINE__#withtheexistingreadline__NEW_LINE____NEW_LINE__globalbuffer_handle,prompt_handle,suggest_handle,eof,\__NEW_LINE__show_suggestions__NEW_LINE____NEW_LINE__#XXXcircularimports__NEW_LINE__frompwnlib.termimportterm_mode__NEW_LINE__ifnotterm_mode:__NEW_LINE__six.print_(prompt,end='',flush=True)__NEW_LINE__returngetattr(sys.stdin,'buffer',sys.stdin).readline(_size).rstrip(b'\n')__NEW_LINE__show_suggestions=False__NEW_LINE__eof=False__NEW_LINE__ifprompt:__NEW_LINE__prompt_handle=term.output(prompt,float=float,priority=priority)__NEW_LINE__else:__NEW_LINE__prompt_handle=None__NEW_LINE__buffer_handle=term.output(float=float,priority=priority)__NEW_LINE__suggest_handle=None__NEW_LINE__clear()__NEW_LINE__ifstartup_hook:__NEW_LINE__startup_hook()__NEW_LINE__try:__NEW_LINE__whileTrue:__NEW_LINE__try:__NEW_LINE__try:__NEW_LINE__keymap.handle_input()__NEW_LINE__exceptEOFError:__NEW_LINE__iflen(buffer_left+buffer_right)==0:__NEW_LINE__returnb''__NEW_LINE__ifeof:__NEW_LINE__returnb''__NEW_LINE__else:__NEW_LINE__buffer=(buffer_left+buffer_right)__NEW_LINE__ifbuffer:__NEW_LINE__history.insert(0,buffer)__NEW_LINE__returnforce_to_bytes(buffer)+b'\n'__NEW_LINE__exceptKeyboardInterrupt:__NEW_LINE__control_c()__NEW_LINE__finally:__NEW_LINE__line=buffer_left+buffer_right+'\n'__NEW_LINE__buffer_handle.update(line)__NEW_LINE__buffer_handle.freeze()__NEW_LINE__buffer_handle=None__NEW_LINE__ifprompt_handle:__NEW_LINE__prompt_handle.freeze()__NEW_LINE__prompt_handle=None__NEW_LINE__ifsuggest_handle:__NEW_LINE__suggest_handle.freeze()__NEW_LINE__suggest_handle=None__NEW_LINE__ifshutdown_hook:__NEW_LINE__shutdown_hook()"
+9877,"    def init(self):__NEW_LINE__        """"""Initialize a module from the database and validate""""""__NEW_LINE__        self.__item = None__NEW_LINE__        self.__baseItem = None__NEW_LINE__        self.__charge = None__NEW_LINE__        self.__mutaplasmid = None__NEW_LINE____NEW_LINE__        # we need this early if module is invalid and returns early__NEW_LINE__        self.__slot = self.dummySlot__NEW_LINE____NEW_LINE__        if self.itemID:__NEW_LINE__            self.__item = eos.db.getItem(self.itemID)__NEW_LINE__            if self.__item is None:__NEW_LINE__                pyfalog.error(""Item (id: {0}) does not exist"", self.itemID)__NEW_LINE__                return__NEW_LINE____NEW_LINE__        if self.baseItemID:__NEW_LINE__            self.__item = eos.db.getItemWithBaseItemAttribute(self.itemID, self.baseItemID)__NEW_LINE__            self.__baseItem = eos.db.getItem(self.baseItemID)__NEW_LINE__            self.__mutaplasmid = eos.db.getMutaplasmid(self.mutaplasmidID)__NEW_LINE__            if self.__baseItem is None:__NEW_LINE__                pyfalog.error(""Base Item (id: {0}) does not exist"", self.itemID)__NEW_LINE__                return__NEW_LINE____NEW_LINE__        if self.isInvalid:__NEW_LINE__            pyfalog.error(""Item (id: {0}) is not a Module"", self.itemID)__NEW_LINE__            return__NEW_LINE____NEW_LINE__        if self.chargeID:__NEW_LINE__            self.__charge = eos.db.getItem(self.chargeID)__NEW_LINE____NEW_LINE__        self.build()","def init(self):
+    """"""Initialize a module from the database and validate""""""
+    self.__item = None
+    self.__baseItem = None
+    self.__charge = None
+    self.__mutaplasmid = None
+    # we need this early if module is invalid and returns early
+    self.__slot = self.dummySlot
+    if self.itemID:
+        self.__item = eos.db.getItem(self.itemID)
+        if self.__item is None:
+            pyfalog.error(""Item (id: {0}) does not exist"", self.itemID)
+            return
+    if self.baseItemID:
+        self.__item = eos.db.getItemWithBaseItemAttribute(self.itemID, self.baseItemID)
+        self.__baseItem = eos.db.getItem(self.baseItemID)
+        self.__mutaplasmid = eos.db.getMutaplasmid(self.mutaplasmidID)
+        if self.__baseItem is None:
+            pyfalog.error(""Base Item (id: {0}) does not exist"", self.itemID)
+            return
+    if self.isInvalid:
+        pyfalog.error(""Item (id: {0}) is not a Module"", self.itemID)
+        return
+    if self.chargeID:
+        self.__charge = eos.db.getItem(self.chargeID)
+    self.build()
+","def init ( self ) : <TAB> """"""Initialize a module from the database and validate"""""" <TAB> self . __item = None <TAB> self . __baseItem = None <TAB> self . __charge = None <TAB> self . __mutaplasmid = None <TAB> <TAB> self . __slot = self . dummySlot <TAB> if self . itemID : <TAB> <TAB> self . __item = eos . db . getItem ( self . itemID ) <TAB> <TAB> if self . __item is None : <TAB> <TAB> <TAB> pyfalog . error ( ""Item (id: {0}) does not exist"" , self . itemID ) <TAB> <TAB> <TAB> return <TAB> if self . baseItemID : <TAB> <TAB> self . __item = eos . db . getItemWithBaseItemAttribute ( self . itemID , self . baseItemID ) <TAB> <TAB> self . __baseItem = eos . db . getItem ( self . baseItemID ) <TAB> <TAB> self . __mutaplasmid = eos . db . getMutaplasmid ( self . mutaplasmidID ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> pyfalog . error ( ""Base Item (id: {0}) does not exist"" , self . itemID ) <TAB> <TAB> <TAB> return <TAB> if self . isInvalid : <TAB> <TAB> pyfalog . error ( ""Item (id: {0}) is not a Module"" , self . itemID ) <TAB> <TAB> return <TAB> if self . chargeID : <TAB> <TAB> self . __charge = eos . db . getItem ( self . chargeID ) <TAB> self . build ( )",if self . __baseItem is None :,347,"definit(self):__NEW_LINE__""""""Initializeamodulefromthedatabaseandvalidate""""""__NEW_LINE__self.__item=None__NEW_LINE__self.__baseItem=None__NEW_LINE__self.__charge=None__NEW_LINE__self.__mutaplasmid=None__NEW_LINE____NEW_LINE__#weneedthisearlyifmoduleisinvalidandreturnsearly__NEW_LINE__self.__slot=self.dummySlot__NEW_LINE____NEW_LINE__ifself.itemID:__NEW_LINE__self.__item=eos.db.getItem(self.itemID)__NEW_LINE__ifself.__itemisNone:__NEW_LINE__pyfalog.error(""Item(id:{0})doesnotexist"",self.itemID)__NEW_LINE__return__NEW_LINE____NEW_LINE__ifself.baseItemID:__NEW_LINE__self.__item=eos.db.getItemWithBaseItemAttribute(self.itemID,self.baseItemID)__NEW_LINE__self.__baseItem=eos.db.getItem(self.baseItemID)__NEW_LINE__self.__mutaplasmid=eos.db.getMutaplasmid(self.mutaplasmidID)__NEW_LINE__ifself.__baseItemisNone:__NEW_LINE__pyfalog.error(""BaseItem(id:{0})doesnotexist"",self.itemID)__NEW_LINE__return__NEW_LINE____NEW_LINE__ifself.isInvalid:__NEW_LINE__pyfalog.error(""Item(id:{0})isnotaModule"",self.itemID)__NEW_LINE__return__NEW_LINE____NEW_LINE__ifself.chargeID:__NEW_LINE__self.__charge=eos.db.getItem(self.chargeID)__NEW_LINE____NEW_LINE__self.build()"
+25413,"def _get_enclosing_context_level(child_context, name):__NEW_LINE__    # returns level of enclosing context that defined the variable `name`__NEW_LINE__    # i.e. level = 2 means `name` is found two levels up from the nested `child_context`__NEW_LINE__    if name in child_context.local_vars:__NEW_LINE__        return None__NEW_LINE__    else:__NEW_LINE__        level = 0__NEW_LINE__        for context in child_context.outer_contexts[::-1]:__NEW_LINE__            level += 1__NEW_LINE__            if name in context.local_vars and context.local_vars[name] is not None:__NEW_LINE__                return level__NEW_LINE____NEW_LINE__    return None","def _get_enclosing_context_level(child_context, name):
+    # returns level of enclosing context that defined the variable `name`
+    # i.e. level = 2 means `name` is found two levels up from the nested `child_context`
+    if name in child_context.local_vars:
+        return None
+    else:
+        level = 0
+        for context in child_context.outer_contexts[::-1]:
+            level += 1
+            if name in context.local_vars and context.local_vars[name] is not None:
+                return level
+    return None
+","def _get_enclosing_context_level ( child_context , name ) : <TAB> <TAB> <TAB> if name in child_context . local_vars : <TAB> <TAB> return None <TAB> else : <TAB> <TAB> level = 0 <TAB> <TAB> for context in child_context . outer_contexts [ : : - 1 ] : <TAB> <TAB> <TAB> level += 1 <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> return level <TAB> return None",if name in context . local_vars and context . local_vars [ name ] is not None :,146,"def_get_enclosing_context_level(child_context,name):__NEW_LINE__#returnslevelofenclosingcontextthatdefinedthevariable`name`__NEW_LINE__#i.e.level=2means`name`isfoundtwolevelsupfromthenested`child_context`__NEW_LINE__ifnameinchild_context.local_vars:__NEW_LINE__returnNone__NEW_LINE__else:__NEW_LINE__level=0__NEW_LINE__forcontextinchild_context.outer_contexts[::-1]:__NEW_LINE__level+=1__NEW_LINE__ifnameincontext.local_varsandcontext.local_vars[name]isnotNone:__NEW_LINE__returnlevel__NEW_LINE____NEW_LINE__returnNone"
+20399,"def test_object_role_JT_attach(rando, job_template, workflow_job_template, inventory_source,__NEW_LINE__                               notification_template, res_role, expect):__NEW_LINE__    nt_organization = Organization.objects.create(name='organization just for the notification template')__NEW_LINE__    nt_organization.notification_admin_role.members.add(rando)__NEW_LINE__    notification_template.organization = nt_organization__NEW_LINE__    notification_template.save()__NEW_LINE__    kwargs = dict(__NEW_LINE__        sub_obj=notification_template,__NEW_LINE__        relationship='notification_templates_success',__NEW_LINE__        data={'id': notification_template.id}__NEW_LINE__    )__NEW_LINE__    permissions = {}__NEW_LINE__    expected_permissions = {}__NEW_LINE____NEW_LINE__    for resource in (job_template, workflow_job_template, inventory_source):__NEW_LINE__        permission_resource = resource__NEW_LINE__        if resource == inventory_source:__NEW_LINE__            permission_resource = inventory_source.inventory__NEW_LINE__        model_name = resource.__class__.__name____NEW_LINE__        if res_role is None or hasattr(permission_resource, res_role):__NEW_LINE__            if res_role is not None:__NEW_LINE__                getattr(permission_resource, res_role).members.add(rando)__NEW_LINE__            permissions[model_name] = rando.can_access(__NEW_LINE__                resource.__class__, 'attach', resource, **kwargs__NEW_LINE__            )__NEW_LINE__            expected_permissions[model_name] = expect__NEW_LINE__        else:__NEW_LINE__            permissions[model_name] = None__NEW_LINE__            expected_permissions[model_name] = None__NEW_LINE____NEW_LINE__    assert permissions == expected_permissions","def test_object_role_JT_attach(
+    rando,
+    job_template,
+    workflow_job_template,
+    inventory_source,
+    notification_template,
+    res_role,
+    expect,
+):
+    nt_organization = Organization.objects.create(
+        name=""organization just for the notification template""
+    )
+    nt_organization.notification_admin_role.members.add(rando)
+    notification_template.organization = nt_organization
+    notification_template.save()
+    kwargs = dict(
+        sub_obj=notification_template,
+        relationship=""notification_templates_success"",
+        data={""id"": notification_template.id},
+    )
+    permissions = {}
+    expected_permissions = {}
+    for resource in (job_template, workflow_job_template, inventory_source):
+        permission_resource = resource
+        if resource == inventory_source:
+            permission_resource = inventory_source.inventory
+        model_name = resource.__class__.__name__
+        if res_role is None or hasattr(permission_resource, res_role):
+            if res_role is not None:
+                getattr(permission_resource, res_role).members.add(rando)
+            permissions[model_name] = rando.can_access(
+                resource.__class__, ""attach"", resource, **kwargs
+            )
+            expected_permissions[model_name] = expect
+        else:
+            permissions[model_name] = None
+            expected_permissions[model_name] = None
+    assert permissions == expected_permissions
+","def test_object_role_JT_attach ( <TAB> rando , <TAB> job_template , <TAB> workflow_job_template , <TAB> inventory_source , <TAB> notification_template , <TAB> res_role , <TAB> expect , ) : <TAB> nt_organization = Organization . objects . create ( <TAB> <TAB> name = ""organization just for the notification template"" <TAB> ) <TAB> nt_organization . notification_admin_role . members . add ( rando ) <TAB> notification_template . organization = nt_organization <TAB> notification_template . save ( ) <TAB> kwargs = dict ( <TAB> <TAB> sub_obj = notification_template , <TAB> <TAB> relationship = ""notification_templates_success"" , <TAB> <TAB> data = { ""id"" : notification_template . id } , <TAB> ) <TAB> permissions = { } <TAB> expected_permissions = { } <TAB> for resource in ( job_template , workflow_job_template , inventory_source ) : <TAB> <TAB> permission_resource = resource <TAB> <TAB> if resource == inventory_source : <TAB> <TAB> <TAB> permission_resource = inventory_source . inventory <TAB> <TAB> model_name = resource . __class__ . __name__ <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> if res_role is not None : <TAB> <TAB> <TAB> <TAB> getattr ( permission_resource , res_role ) . members . add ( rando ) <TAB> <TAB> <TAB> permissions [ model_name ] = rando . can_access ( <TAB> <TAB> <TAB> <TAB> resource . __class__ , ""attach"" , resource , ** kwargs <TAB> <TAB> <TAB> ) <TAB> <TAB> <TAB> expected_permissions [ model_name ] = expect <TAB> <TAB> else : <TAB> <TAB> <TAB> permissions [ model_name ] = None <TAB> <TAB> <TAB> expected_permissions [ model_name ] = None <TAB> assert permissions == expected_permissions","if res_role is None or hasattr ( permission_resource , res_role ) :",389,"deftest_object_role_JT_attach(rando,job_template,workflow_job_template,inventory_source,__NEW_LINE__notification_template,res_role,expect):__NEW_LINE__nt_organization=Organization.objects.create(name='organizationjustforthenotificationtemplate')__NEW_LINE__nt_organization.notification_admin_role.members.add(rando)__NEW_LINE__notification_template.organization=nt_organization__NEW_LINE__notification_template.save()__NEW_LINE__kwargs=dict(__NEW_LINE__sub_obj=notification_template,__NEW_LINE__relationship='notification_templates_success',__NEW_LINE__data={'id':notification_template.id}__NEW_LINE__)__NEW_LINE__permissions={}__NEW_LINE__expected_permissions={}__NEW_LINE____NEW_LINE__forresourcein(job_template,workflow_job_template,inventory_source):__NEW_LINE__permission_resource=resource__NEW_LINE__ifresource==inventory_source:__NEW_LINE__permission_resource=inventory_source.inventory__NEW_LINE__model_name=resource.__class__.__name____NEW_LINE__ifres_roleisNoneorhasattr(permission_resource,res_role):__NEW_LINE__ifres_roleisnotNone:__NEW_LINE__getattr(permission_resource,res_role).members.add(rando)__NEW_LINE__permissions[model_name]=rando.can_access(__NEW_LINE__resource.__class__,'attach',resource,**kwargs__NEW_LINE__)__NEW_LINE__expected_permissions[model_name]=expect__NEW_LINE__else:__NEW_LINE__permissions[model_name]=None__NEW_LINE__expected_permissions[model_name]=None__NEW_LINE____NEW_LINE__assertpermissions==expected_permissions"
+14282,"    def run(self):__NEW_LINE__        while True:__NEW_LINE__            if not self.initialized:__NEW_LINE__                try:__NEW_LINE__                    with Client() as c:__NEW_LINE__                        self.disks = c.call(""disk.disks_for_temperature_monitoring"")__NEW_LINE__                        self.powermode = c.call(""smart.config"")[""powermode""]__NEW_LINE__                except Exception as e:__NEW_LINE__                    print(f""Failed to query disks for temperature monitoring: {e!r}"")__NEW_LINE__                else:__NEW_LINE__                    self.initialized = True__NEW_LINE____NEW_LINE__            if not self.initialized:__NEW_LINE__                time.sleep(self.interval)__NEW_LINE__                continue__NEW_LINE____NEW_LINE__            if not self.disks:__NEW_LINE__                return__NEW_LINE____NEW_LINE__            try:__NEW_LINE__                with Client() as c:__NEW_LINE__                    self.temperatures = {__NEW_LINE__                        disk: temperature * 1000__NEW_LINE__                        for disk, temperature in c.call(""disk.temperatures"", self.disks, self.powermode).items()__NEW_LINE__                        if temperature is not None__NEW_LINE__                    }__NEW_LINE__            except Exception as e:__NEW_LINE__                print(f""Failed to collect disks temperatures: {e!r}"")__NEW_LINE__                self.temperatures = {}__NEW_LINE____NEW_LINE__            time.sleep(self.interval)","def run(self):
+    while True:
+        if not self.initialized:
+            try:
+                with Client() as c:
+                    self.disks = c.call(""disk.disks_for_temperature_monitoring"")
+                    self.powermode = c.call(""smart.config"")[""powermode""]
+            except Exception as e:
+                print(f""Failed to query disks for temperature monitoring: {e!r}"")
+            else:
+                self.initialized = True
+        if not self.initialized:
+            time.sleep(self.interval)
+            continue
+        if not self.disks:
+            return
+        try:
+            with Client() as c:
+                self.temperatures = {
+                    disk: temperature * 1000
+                    for disk, temperature in c.call(
+                        ""disk.temperatures"", self.disks, self.powermode
+                    ).items()
+                    if temperature is not None
+                }
+        except Exception as e:
+            print(f""Failed to collect disks temperatures: {e!r}"")
+            self.temperatures = {}
+        time.sleep(self.interval)
+","def run ( self ) : <TAB> while True : <TAB> <TAB> if not self . initialized : <TAB> <TAB> <TAB> try : <TAB> <TAB> <TAB> <TAB> with Client ( ) as c : <TAB> <TAB> <TAB> <TAB> <TAB> self . disks = c . call ( ""disk.disks_for_temperature_monitoring"" ) <TAB> <TAB> <TAB> <TAB> <TAB> self . powermode = c . call ( ""smart.config"" ) [ ""powermode"" ] <TAB> <TAB> <TAB> except Exception as e : <TAB> <TAB> <TAB> <TAB> print ( f""Failed to query disks for temperature monitoring: {e!r}"" ) <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> self . initialized = True <TAB> <TAB> if not self . initialized : <TAB> <TAB> <TAB> time . sleep ( self . interval ) <TAB> <TAB> <TAB> continue <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> return <TAB> <TAB> try : <TAB> <TAB> <TAB> with Client ( ) as c : <TAB> <TAB> <TAB> <TAB> self . temperatures = { <TAB> <TAB> <TAB> <TAB> <TAB> disk : temperature * 1000 <TAB> <TAB> <TAB> <TAB> <TAB> for disk , temperature in c . call ( <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> ""disk.temperatures"" , self . disks , self . powermode <TAB> <TAB> <TAB> <TAB> <TAB> ) . items ( ) <TAB> <TAB> <TAB> <TAB> <TAB> if temperature is not None <TAB> <TAB> <TAB> <TAB> } <TAB> <TAB> except Exception as e : <TAB> <TAB> <TAB> print ( f""Failed to collect disks temperatures: {e!r}"" ) <TAB> <TAB> <TAB> self . temperatures = { } <TAB> <TAB> time . sleep ( self . interval )",if not self . disks :,322,"defrun(self):__NEW_LINE__whileTrue:__NEW_LINE__ifnotself.initialized:__NEW_LINE__try:__NEW_LINE__withClient()asc:__NEW_LINE__self.disks=c.call(""disk.disks_for_temperature_monitoring"")__NEW_LINE__self.powermode=c.call(""smart.config"")[""powermode""]__NEW_LINE__exceptExceptionase:__NEW_LINE__print(f""Failedtoquerydisksfortemperaturemonitoring:{e!r}"")__NEW_LINE__else:__NEW_LINE__self.initialized=True__NEW_LINE____NEW_LINE__ifnotself.initialized:__NEW_LINE__time.sleep(self.interval)__NEW_LINE__continue__NEW_LINE____NEW_LINE__ifnotself.disks:__NEW_LINE__return__NEW_LINE____NEW_LINE__try:__NEW_LINE__withClient()asc:__NEW_LINE__self.temperatures={__NEW_LINE__disk:temperature*1000__NEW_LINE__fordisk,temperatureinc.call(""disk.temperatures"",self.disks,self.powermode).items()__NEW_LINE__iftemperatureisnotNone__NEW_LINE__}__NEW_LINE__exceptExceptionase:__NEW_LINE__print(f""Failedtocollectdiskstemperatures:{e!r}"")__NEW_LINE__self.temperatures={}__NEW_LINE____NEW_LINE__time.sleep(self.interval)"
+1698,"def _performance_by_month(user_id, months=12, end_month=None, end_year=None):__NEW_LINE__    monthly_data = OrderedDict()__NEW_LINE____NEW_LINE__    now = datetime.now()__NEW_LINE__    if not end_month:__NEW_LINE__        end_month = now.month__NEW_LINE__    if not end_year:__NEW_LINE__        end_year = now.year__NEW_LINE____NEW_LINE__    end_time = time.mktime((end_year, end_month + 1, 1, 0, 0, 0, 0, 0, -1))__NEW_LINE__    start_time = time.mktime((end_year, end_month + 1 - months, 1, 0, 0, 0, 0, 0, -1))__NEW_LINE____NEW_LINE__    sql = PerformanceGraph.objects.filter_raw(__NEW_LINE__        'log_activity.created >=', date.fromtimestamp(start_time).isoformat()__NEW_LINE__    ).filter_raw('log_activity.created <', date.fromtimestamp(end_time).isoformat())__NEW_LINE____NEW_LINE__    for row in sql.all():__NEW_LINE__        label = row.approval_created.isoformat()[:7]__NEW_LINE____NEW_LINE__        if label not in monthly_data:__NEW_LINE__            xaxis = row.approval_created.strftime('%b %Y')__NEW_LINE__            monthly_data[label] = dict(teamcount=0, usercount=0, teamamt=0, label=xaxis)__NEW_LINE____NEW_LINE__        monthly_data[label]['teamamt'] = monthly_data[label]['teamamt'] + 1__NEW_LINE__        monthly_data_count = monthly_data[label]['teamcount']__NEW_LINE__        monthly_data[label]['teamcount'] = monthly_data_count + row.total__NEW_LINE____NEW_LINE__        if row.user_id == user_id:__NEW_LINE__            user_count = monthly_data[label]['usercount']__NEW_LINE__            monthly_data[label]['usercount'] = user_count + row.total__NEW_LINE____NEW_LINE__    # Calculate averages__NEW_LINE__    for i, vals in monthly_data.items():__NEW_LINE__        average = round(vals['teamcount'] / float(vals['teamamt']), 1)__NEW_LINE__        monthly_data[i]['teamavg'] = str(average)  # floats aren't valid json__NEW_LINE____NEW_LINE__    return monthly_data","def _performance_by_month(user_id, months=12, end_month=None, end_year=None):
+    monthly_data = OrderedDict()
+    now = datetime.now()
+    if not end_month:
+        end_month = now.month
+    if not end_year:
+        end_year = now.year
+    end_time = time.mktime((end_year, end_month + 1, 1, 0, 0, 0, 0, 0, -1))
+    start_time = time.mktime((end_year, end_month + 1 - months, 1, 0, 0, 0, 0, 0, -1))
+    sql = PerformanceGraph.objects.filter_raw(
+        ""log_activity.created >="", date.fromtimestamp(start_time).isoformat()
+    ).filter_raw(""log_activity.created <"", date.fromtimestamp(end_time).isoformat())
+    for row in sql.all():
+        label = row.approval_created.isoformat()[:7]
+        if label not in monthly_data:
+            xaxis = row.approval_created.strftime(""%b %Y"")
+            monthly_data[label] = dict(teamcount=0, usercount=0, teamamt=0, label=xaxis)
+        monthly_data[label][""teamamt""] = monthly_data[label][""teamamt""] + 1
+        monthly_data_count = monthly_data[label][""teamcount""]
+        monthly_data[label][""teamcount""] = monthly_data_count + row.total
+        if row.user_id == user_id:
+            user_count = monthly_data[label][""usercount""]
+            monthly_data[label][""usercount""] = user_count + row.total
+    # Calculate averages
+    for i, vals in monthly_data.items():
+        average = round(vals[""teamcount""] / float(vals[""teamamt""]), 1)
+        monthly_data[i][""teamavg""] = str(average)  # floats aren't valid json
+    return monthly_data
+","def _performance_by_month ( user_id , months = 12 , end_month = None , end_year = None ) : <TAB> monthly_data = OrderedDict ( ) <TAB> now = datetime . now ( ) <TAB> if not end_month : <TAB> <TAB> end_month = now . month <TAB> if not end_year : <TAB> <TAB> end_year = now . year <TAB> end_time = time . mktime ( ( end_year , end_month + 1 , 1 , 0 , 0 , 0 , 0 , 0 , - 1 ) ) <TAB> start_time = time . mktime ( ( end_year , end_month + 1 - months , 1 , 0 , 0 , 0 , 0 , 0 , - 1 ) ) <TAB> sql = PerformanceGraph . objects . filter_raw ( <TAB> <TAB> ""log_activity.created >="" , date . fromtimestamp ( start_time ) . isoformat ( ) <TAB> ) . filter_raw ( ""log_activity.created <"" , date . fromtimestamp ( end_time ) . isoformat ( ) ) <TAB> for row in sql . all ( ) : <TAB> <TAB> label = row . approval_created . isoformat ( ) [ : 7 ] <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> xaxis = row . approval_created . strftime ( ""%b %Y"" ) <TAB> <TAB> <TAB> monthly_data [ label ] = dict ( teamcount = 0 , usercount = 0 , teamamt = 0 , label = xaxis ) <TAB> <TAB> monthly_data [ label ] [ ""teamamt"" ] = monthly_data [ label ] [ ""teamamt"" ] + 1 <TAB> <TAB> monthly_data_count = monthly_data [ label ] [ ""teamcount"" ] <TAB> <TAB> monthly_data [ label ] [ ""teamcount"" ] = monthly_data_count + row . total <TAB> <TAB> if row . user_id == user_id : <TAB> <TAB> <TAB> user_count = monthly_data [ label ] [ ""usercount"" ] <TAB> <TAB> <TAB> monthly_data [ label ] [ ""usercount"" ] = user_count + row . total <TAB> <TAB> for i , vals in monthly_data . items ( ) : <TAB> <TAB> average = round ( vals [ ""teamcount"" ] / float ( vals [ ""teamamt"" ] ) , 1 ) <TAB> <TAB> monthly_data [ i ] [ ""teamavg"" ] = str ( average ) <TAB> return monthly_data",if label not in monthly_data :,500,"def_performance_by_month(user_id,months=12,end_month=None,end_year=None):__NEW_LINE__monthly_data=OrderedDict()__NEW_LINE____NEW_LINE__now=datetime.now()__NEW_LINE__ifnotend_month:__NEW_LINE__end_month=now.month__NEW_LINE__ifnotend_year:__NEW_LINE__end_year=now.year__NEW_LINE____NEW_LINE__end_time=time.mktime((end_year,end_month+1,1,0,0,0,0,0,-1))__NEW_LINE__start_time=time.mktime((end_year,end_month+1-months,1,0,0,0,0,0,-1))__NEW_LINE____NEW_LINE__sql=PerformanceGraph.objects.filter_raw(__NEW_LINE__'log_activity.created>=',date.fromtimestamp(start_time).isoformat()__NEW_LINE__).filter_raw('log_activity.created<',date.fromtimestamp(end_time).isoformat())__NEW_LINE____NEW_LINE__forrowinsql.all():__NEW_LINE__label=row.approval_created.isoformat()[:7]__NEW_LINE____NEW_LINE__iflabelnotinmonthly_data:__NEW_LINE__xaxis=row.approval_created.strftime('%b%Y')__NEW_LINE__monthly_data[label]=dict(teamcount=0,usercount=0,teamamt=0,label=xaxis)__NEW_LINE____NEW_LINE__monthly_data[label]['teamamt']=monthly_data[label]['teamamt']+1__NEW_LINE__monthly_data_count=monthly_data[label]['teamcount']__NEW_LINE__monthly_data[label]['teamcount']=monthly_data_count+row.total__NEW_LINE____NEW_LINE__ifrow.user_id==user_id:__NEW_LINE__user_count=monthly_data[label]['usercount']__NEW_LINE__monthly_data[label]['usercount']=user_count+row.total__NEW_LINE____NEW_LINE__#Calculateaverages__NEW_LINE__fori,valsinmonthly_data.items():__NEW_LINE__average=round(vals['teamcount']/float(vals['teamamt']),1)__NEW_LINE__monthly_data[i]['teamavg']=str(average)#floatsaren'tvalidjson__NEW_LINE____NEW_LINE__returnmonthly_data"
+12810,"    def get_action(self, values, option_string):  # pylint: disable=no-self-use__NEW_LINE__        try:__NEW_LINE__            properties = defaultdict(list)__NEW_LINE__            for (k, v) in (x.split('=', 1) for x in values):__NEW_LINE__                properties[k].append(v)__NEW_LINE__            properties = dict(properties)__NEW_LINE__        except ValueError:__NEW_LINE__            raise CLIError('usage error: {} [KEY=VALUE ...]'.format(option_string))__NEW_LINE__        d = {}__NEW_LINE__        for k in properties:__NEW_LINE__            kl = k.lower()__NEW_LINE__            v = properties[k]__NEW_LINE__            if kl == 'first-name':__NEW_LINE__                d['first_name'] = v[0]__NEW_LINE__            elif kl == 'last-name':__NEW_LINE__                d['last_name'] = v[0]__NEW_LINE__            elif kl == 'company-name':__NEW_LINE__                d['company_name'] = v[0]__NEW_LINE__            elif kl == 'address-line1':__NEW_LINE__                d['address_line1'] = v[0]__NEW_LINE__            elif kl == 'address-line2':__NEW_LINE__                d['address_line2'] = v[0]__NEW_LINE__            elif kl == 'address-line3':__NEW_LINE__                d['address_line3'] = v[0]__NEW_LINE__            elif kl == 'city':__NEW_LINE__                d['city'] = v[0]__NEW_LINE__            elif kl == 'district':__NEW_LINE__                d['district'] = v[0]__NEW_LINE__            elif kl == 'region':__NEW_LINE__                d['region'] = v[0]__NEW_LINE__            elif kl == 'country':__NEW_LINE__                d['country'] = v[0]__NEW_LINE__            elif kl == 'postal-code':__NEW_LINE__                d['postal_code'] = v[0]__NEW_LINE__            elif kl == 'email':__NEW_LINE__                d['email'] = v[0]__NEW_LINE__            elif kl == 'phone-number':__NEW_LINE__                d['phone_number'] = v[0]__NEW_LINE__        return d","def get_action(self, values, option_string):  # pylint: disable=no-self-use
+    try:
+        properties = defaultdict(list)
+        for (k, v) in (x.split(""="", 1) for x in values):
+            properties[k].append(v)
+        properties = dict(properties)
+    except ValueError:
+        raise CLIError(""usage error: {} [KEY=VALUE ...]"".format(option_string))
+    d = {}
+    for k in properties:
+        kl = k.lower()
+        v = properties[k]
+        if kl == ""first-name"":
+            d[""first_name""] = v[0]
+        elif kl == ""last-name"":
+            d[""last_name""] = v[0]
+        elif kl == ""company-name"":
+            d[""company_name""] = v[0]
+        elif kl == ""address-line1"":
+            d[""address_line1""] = v[0]
+        elif kl == ""address-line2"":
+            d[""address_line2""] = v[0]
+        elif kl == ""address-line3"":
+            d[""address_line3""] = v[0]
+        elif kl == ""city"":
+            d[""city""] = v[0]
+        elif kl == ""district"":
+            d[""district""] = v[0]
+        elif kl == ""region"":
+            d[""region""] = v[0]
+        elif kl == ""country"":
+            d[""country""] = v[0]
+        elif kl == ""postal-code"":
+            d[""postal_code""] = v[0]
+        elif kl == ""email"":
+            d[""email""] = v[0]
+        elif kl == ""phone-number"":
+            d[""phone_number""] = v[0]
+    return d
+","def get_action ( self , values , option_string ) : <TAB> try : <TAB> <TAB> properties = defaultdict ( list ) <TAB> <TAB> for ( k , v ) in ( x . split ( ""="" , 1 ) for x in values ) : <TAB> <TAB> <TAB> properties [ k ] . append ( v ) <TAB> <TAB> properties = dict ( properties ) <TAB> except ValueError : <TAB> <TAB> raise CLIError ( ""usage error: {} [KEY=VALUE ...]"" . format ( option_string ) ) <TAB> d = { } <TAB> for k in properties : <TAB> <TAB> kl = k . lower ( ) <TAB> <TAB> v = properties [ k ] <TAB> <TAB> if kl == ""first-name"" : <TAB> <TAB> <TAB> d [ ""first_name"" ] = v [ 0 ] <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> d [ ""last_name"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""company-name"" : <TAB> <TAB> <TAB> d [ ""company_name"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""address-line1"" : <TAB> <TAB> <TAB> d [ ""address_line1"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""address-line2"" : <TAB> <TAB> <TAB> d [ ""address_line2"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""address-line3"" : <TAB> <TAB> <TAB> d [ ""address_line3"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""city"" : <TAB> <TAB> <TAB> d [ ""city"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""district"" : <TAB> <TAB> <TAB> d [ ""district"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""region"" : <TAB> <TAB> <TAB> d [ ""region"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""country"" : <TAB> <TAB> <TAB> d [ ""country"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""postal-code"" : <TAB> <TAB> <TAB> d [ ""postal_code"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""email"" : <TAB> <TAB> <TAB> d [ ""email"" ] = v [ 0 ] <TAB> <TAB> elif kl == ""phone-number"" : <TAB> <TAB> <TAB> d [ ""phone_number"" ] = v [ 0 ] <TAB> return d","elif kl == ""last-name"" :",469,"defget_action(self,values,option_string):#pylint:disable=no-self-use__NEW_LINE__try:__NEW_LINE__properties=defaultdict(list)__NEW_LINE__for(k,v)in(x.split('=',1)forxinvalues):__NEW_LINE__properties[k].append(v)__NEW_LINE__properties=dict(properties)__NEW_LINE__exceptValueError:__NEW_LINE__raiseCLIError('usageerror:{}[KEY=VALUE...]'.format(option_string))__NEW_LINE__d={}__NEW_LINE__forkinproperties:__NEW_LINE__kl=k.lower()__NEW_LINE__v=properties[k]__NEW_LINE__ifkl=='first-name':__NEW_LINE__d['first_name']=v[0]__NEW_LINE__elifkl=='last-name':__NEW_LINE__d['last_name']=v[0]__NEW_LINE__elifkl=='company-name':__NEW_LINE__d['company_name']=v[0]__NEW_LINE__elifkl=='address-line1':__NEW_LINE__d['address_line1']=v[0]__NEW_LINE__elifkl=='address-line2':__NEW_LINE__d['address_line2']=v[0]__NEW_LINE__elifkl=='address-line3':__NEW_LINE__d['address_line3']=v[0]__NEW_LINE__elifkl=='city':__NEW_LINE__d['city']=v[0]__NEW_LINE__elifkl=='district':__NEW_LINE__d['district']=v[0]__NEW_LINE__elifkl=='region':__NEW_LINE__d['region']=v[0]__NEW_LINE__elifkl=='country':__NEW_LINE__d['country']=v[0]__NEW_LINE__elifkl=='postal-code':__NEW_LINE__d['postal_code']=v[0]__NEW_LINE__elifkl=='email':__NEW_LINE__d['email']=v[0]__NEW_LINE__elifkl=='phone-number':__NEW_LINE__d['phone_number']=v[0]__NEW_LINE__returnd"
+10705,"def calcPolygonRect(pointArray):__NEW_LINE__    """""" receives a point list and returns the rect that contains them as a tupple -> tuple left, top, right, bottom__NEW_LINE__    """"""__NEW_LINE__    # init to ridiculously big values. not very elegant or eficient__NEW_LINE__    l, t, r, b = 10000000, 10000000, -10000000, -10000000__NEW_LINE__##    l = pointArray[0]__NEW_LINE__##    t = pointArray[1]__NEW_LINE__##    r = l__NEW_LINE__##    b = t__NEW_LINE____NEW_LINE__    for n in pointArray: # calc bounding rectangle rect__NEW_LINE__        if n[0] < l : l = n[0]__NEW_LINE__        if n[0] > r : r = n[0]__NEW_LINE__        if n[1] < t : t = n[1]__NEW_LINE__        if n[1] > b : b = n[1]__NEW_LINE____NEW_LINE__    return l, t, r, b","def calcPolygonRect(pointArray):
+    """"""receives a point list and returns the rect that contains them as a tupple -> tuple left, top, right, bottom""""""
+    # init to ridiculously big values. not very elegant or eficient
+    l, t, r, b = 10000000, 10000000, -10000000, -10000000
+    ##    l = pointArray[0]
+    ##    t = pointArray[1]
+    ##    r = l
+    ##    b = t
+    for n in pointArray:  # calc bounding rectangle rect
+        if n[0] < l:
+            l = n[0]
+        if n[0] > r:
+            r = n[0]
+        if n[1] < t:
+            t = n[1]
+        if n[1] > b:
+            b = n[1]
+    return l, t, r, b
+","def calcPolygonRect ( pointArray ) : <TAB> """"""receives a point list and returns the rect that contains them as a tupple -> tuple left, top, right, bottom"""""" <TAB> <TAB> l , t , r , b = 10000000 , 10000000 , - 10000000 , - 10000000 <TAB> <TAB> <TAB> <TAB> <TAB> for n in pointArray : <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> l = n [ 0 ] <TAB> <TAB> if n [ 0 ] > r : <TAB> <TAB> <TAB> r = n [ 0 ] <TAB> <TAB> if n [ 1 ] < t : <TAB> <TAB> <TAB> t = n [ 1 ] <TAB> <TAB> if n [ 1 ] > b : <TAB> <TAB> <TAB> b = n [ 1 ] <TAB> return l , t , r , b",if n [ 0 ] < l :,233,"defcalcPolygonRect(pointArray):__NEW_LINE__""""""receivesapointlistandreturnstherectthatcontainsthemasatupple->tupleleft,top,right,bottom__NEW_LINE__""""""__NEW_LINE__#inittoridiculouslybigvalues.notveryelegantoreficient__NEW_LINE__l,t,r,b=10000000,10000000,-10000000,-10000000__NEW_LINE__##l=pointArray[0]__NEW_LINE__##t=pointArray[1]__NEW_LINE__##r=l__NEW_LINE__##b=t__NEW_LINE____NEW_LINE__forninpointArray:#calcboundingrectanglerect__NEW_LINE__ifn[0]<l:l=n[0]__NEW_LINE__ifn[0]>r:r=n[0]__NEW_LINE__ifn[1]<t:t=n[1]__NEW_LINE__ifn[1]>b:b=n[1]__NEW_LINE____NEW_LINE__returnl,t,r,b"
+12226,"    def render(self, context):__NEW_LINE__        bits = []__NEW_LINE__        for node in self:__NEW_LINE__            if isinstance(node, Node):__NEW_LINE__                bit = self.render_node(node, context)__NEW_LINE__            else:__NEW_LINE__                bit = node__NEW_LINE__            bits.append(force_unicode(bit))__NEW_LINE__        return mark_safe(u''.join(bits))","def render(self, context):
+    bits = []
+    for node in self:
+        if isinstance(node, Node):
+            bit = self.render_node(node, context)
+        else:
+            bit = node
+        bits.append(force_unicode(bit))
+    return mark_safe(u"""".join(bits))
+","def render ( self , context ) : <TAB> bits = [ ] <TAB> for node in self : <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> bit = self . render_node ( node , context ) <TAB> <TAB> else : <TAB> <TAB> <TAB> bit = node <TAB> <TAB> bits . append ( force_unicode ( bit ) ) <TAB> return mark_safe ( u"""" . join ( bits ) )","if isinstance ( node , Node ) :",84,"defrender(self,context):__NEW_LINE__bits=[]__NEW_LINE__fornodeinself:__NEW_LINE__ifisinstance(node,Node):__NEW_LINE__bit=self.render_node(node,context)__NEW_LINE__else:__NEW_LINE__bit=node__NEW_LINE__bits.append(force_unicode(bit))__NEW_LINE__returnmark_safe(u''.join(bits))"
+927,"def _cache_db_tables_iterator(tables, cache_alias, db_alias):__NEW_LINE__    no_tables = not tables__NEW_LINE__    cache_aliases = settings.CACHES if cache_alias is None else (cache_alias,)__NEW_LINE__    db_aliases = settings.DATABASES if db_alias is None else (db_alias,)__NEW_LINE__    for db_alias in db_aliases:__NEW_LINE__        if no_tables:__NEW_LINE__            tables = connections[db_alias].introspection.table_names()__NEW_LINE__        if tables:__NEW_LINE__            for cache_alias in cache_aliases:__NEW_LINE__                yield cache_alias, db_alias, tables","def _cache_db_tables_iterator(tables, cache_alias, db_alias):
+    no_tables = not tables
+    cache_aliases = settings.CACHES if cache_alias is None else (cache_alias,)
+    db_aliases = settings.DATABASES if db_alias is None else (db_alias,)
+    for db_alias in db_aliases:
+        if no_tables:
+            tables = connections[db_alias].introspection.table_names()
+        if tables:
+            for cache_alias in cache_aliases:
+                yield cache_alias, db_alias, tables
+","def _cache_db_tables_iterator ( tables , cache_alias , db_alias ) : <TAB> no_tables = not tables <TAB> cache_aliases = settings . CACHES if cache_alias is None else ( cache_alias , ) <TAB> db_aliases = settings . DATABASES if db_alias is None else ( db_alias , ) <TAB> for db_alias in db_aliases : <TAB> <TAB> if no_tables : <TAB> <TAB> <TAB> tables = connections [ db_alias ] . introspection . table_names ( ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> for cache_alias in cache_aliases : <TAB> <TAB> <TAB> <TAB> yield cache_alias , db_alias , tables",if tables :,145,"def_cache_db_tables_iterator(tables,cache_alias,db_alias):__NEW_LINE__no_tables=nottables__NEW_LINE__cache_aliases=settings.CACHESifcache_aliasisNoneelse(cache_alias,)__NEW_LINE__db_aliases=settings.DATABASESifdb_aliasisNoneelse(db_alias,)__NEW_LINE__fordb_aliasindb_aliases:__NEW_LINE__ifno_tables:__NEW_LINE__tables=connections[db_alias].introspection.table_names()__NEW_LINE__iftables:__NEW_LINE__forcache_aliasincache_aliases:__NEW_LINE__yieldcache_alias,db_alias,tables"
+10455,"    def semanticTags(self, semanticTags):__NEW_LINE__        if semanticTags is None:__NEW_LINE__            self.__semanticTags = OrderedDict()__NEW_LINE____NEW_LINE__        # check__NEW_LINE__        for key, value in list(semanticTags.items()):__NEW_LINE__            if not isinstance(key, int):__NEW_LINE__                raise TypeError(""At least one key is not a valid int position"")__NEW_LINE__            if not isinstance(value, list):__NEW_LINE__                raise TypeError(""At least one value of the provided dict is not a list of string"")__NEW_LINE__            for x in value:__NEW_LINE__                if not isinstance(x, str):__NEW_LINE__                    raise TypeError(""At least one value of the provided dict is not a list of string"")__NEW_LINE____NEW_LINE__        self.__semanticTags = semanticTags","def semanticTags(self, semanticTags):
+    if semanticTags is None:
+        self.__semanticTags = OrderedDict()
+    # check
+    for key, value in list(semanticTags.items()):
+        if not isinstance(key, int):
+            raise TypeError(""At least one key is not a valid int position"")
+        if not isinstance(value, list):
+            raise TypeError(
+                ""At least one value of the provided dict is not a list of string""
+            )
+        for x in value:
+            if not isinstance(x, str):
+                raise TypeError(
+                    ""At least one value of the provided dict is not a list of string""
+                )
+    self.__semanticTags = semanticTags
+","def semanticTags ( self , semanticTags ) : <TAB> if semanticTags is None : <TAB> <TAB> self . __semanticTags = OrderedDict ( ) <TAB> <TAB> for key , value in list ( semanticTags . items ( ) ) : <TAB> <TAB> if not isinstance ( key , int ) : <TAB> <TAB> <TAB> raise TypeError ( ""At least one key is not a valid int position"" ) <TAB> <TAB> if not isinstance ( value , list ) : <TAB> <TAB> <TAB> raise TypeError ( <TAB> <TAB> <TAB> <TAB> ""At least one value of the provided dict is not a list of string"" <TAB> <TAB> <TAB> ) <TAB> <TAB> for x in value : <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> raise TypeError ( <TAB> <TAB> <TAB> <TAB> <TAB> ""At least one value of the provided dict is not a list of string"" <TAB> <TAB> <TAB> <TAB> ) <TAB> self . __semanticTags = semanticTags","if not isinstance ( x , str ) :",184,"defsemanticTags(self,semanticTags):__NEW_LINE__ifsemanticTagsisNone:__NEW_LINE__self.__semanticTags=OrderedDict()__NEW_LINE____NEW_LINE__#check__NEW_LINE__forkey,valueinlist(semanticTags.items()):__NEW_LINE__ifnotisinstance(key,int):__NEW_LINE__raiseTypeError(""Atleastonekeyisnotavalidintposition"")__NEW_LINE__ifnotisinstance(value,list):__NEW_LINE__raiseTypeError(""Atleastonevalueoftheprovideddictisnotalistofstring"")__NEW_LINE__forxinvalue:__NEW_LINE__ifnotisinstance(x,str):__NEW_LINE__raiseTypeError(""Atleastonevalueoftheprovideddictisnotalistofstring"")__NEW_LINE____NEW_LINE__self.__semanticTags=semanticTags"
+6384,"    def __init__(self,__NEW_LINE__                 backbone,__NEW_LINE__                 refiner=None,__NEW_LINE__                 train_cfg=None,__NEW_LINE__                 test_cfg=None,__NEW_LINE__                 pretrained=None):__NEW_LINE__        super(BaseMattor, self).__init__()__NEW_LINE____NEW_LINE__        self.train_cfg = train_cfg if train_cfg is not None else ConfigDict()__NEW_LINE__        self.test_cfg = test_cfg if test_cfg is not None else ConfigDict()__NEW_LINE____NEW_LINE__        self.backbone = build_backbone(backbone)__NEW_LINE__        # build refiner if it's not None.__NEW_LINE__        if refiner is None:__NEW_LINE__            self.train_cfg['train_refiner'] = False__NEW_LINE__            self.test_cfg['refine'] = False__NEW_LINE__        else:__NEW_LINE__            self.refiner = build_component(refiner)__NEW_LINE____NEW_LINE__        # if argument train_cfg is not None, validate if the config is proper.__NEW_LINE__        if train_cfg is not None:__NEW_LINE__            assert hasattr(self.train_cfg, 'train_refiner')__NEW_LINE__            assert hasattr(self.test_cfg, 'refine')__NEW_LINE__            if self.test_cfg.refine and not self.train_cfg.train_refiner:__NEW_LINE__                print_log(__NEW_LINE__                    'You are not training the refiner, but it is used for '__NEW_LINE__                    'model forwarding.', 'root', logging.WARNING)__NEW_LINE____NEW_LINE__            if not self.train_cfg.train_backbone:__NEW_LINE__                self.freeze_backbone()__NEW_LINE____NEW_LINE__        # validate if test config is proper__NEW_LINE__        if not hasattr(self.test_cfg, 'metrics'):__NEW_LINE__            raise KeyError('Missing key ""metrics"" in test_cfg')__NEW_LINE__        elif mmcv.is_list_of(self.test_cfg.metrics, str):__NEW_LINE__            for metric in self.test_cfg.metrics:__NEW_LINE__                if metric not in self.allowed_metrics:__NEW_LINE__                    raise KeyError(f'metric {metric} is not supported')__NEW_LINE__        elif self.test_cfg.metrics is not None:__NEW_LINE__            raise TypeError('metrics must be None or a list of str')__NEW_LINE____NEW_LINE__        self.init_weights(pretrained)","def __init__(
+    self, backbone, refiner=None, train_cfg=None, test_cfg=None, pretrained=None
+):
+    super(BaseMattor, self).__init__()
+    self.train_cfg = train_cfg if train_cfg is not None else ConfigDict()
+    self.test_cfg = test_cfg if test_cfg is not None else ConfigDict()
+    self.backbone = build_backbone(backbone)
+    # build refiner if it's not None.
+    if refiner is None:
+        self.train_cfg[""train_refiner""] = False
+        self.test_cfg[""refine""] = False
+    else:
+        self.refiner = build_component(refiner)
+    # if argument train_cfg is not None, validate if the config is proper.
+    if train_cfg is not None:
+        assert hasattr(self.train_cfg, ""train_refiner"")
+        assert hasattr(self.test_cfg, ""refine"")
+        if self.test_cfg.refine and not self.train_cfg.train_refiner:
+            print_log(
+                ""You are not training the refiner, but it is used for ""
+                ""model forwarding."",
+                ""root"",
+                logging.WARNING,
+            )
+        if not self.train_cfg.train_backbone:
+            self.freeze_backbone()
+    # validate if test config is proper
+    if not hasattr(self.test_cfg, ""metrics""):
+        raise KeyError('Missing key ""metrics"" in test_cfg')
+    elif mmcv.is_list_of(self.test_cfg.metrics, str):
+        for metric in self.test_cfg.metrics:
+            if metric not in self.allowed_metrics:
+                raise KeyError(f""metric {metric} is not supported"")
+    elif self.test_cfg.metrics is not None:
+        raise TypeError(""metrics must be None or a list of str"")
+    self.init_weights(pretrained)
+","def __init__ ( <TAB> self , backbone , refiner = None , train_cfg = None , test_cfg = None , pretrained = None ) : <TAB> super ( BaseMattor , self ) . __init__ ( ) <TAB> self . train_cfg = train_cfg if train_cfg is not None else ConfigDict ( ) <TAB> self . test_cfg = test_cfg if test_cfg is not None else ConfigDict ( ) <TAB> self . backbone = build_backbone ( backbone ) <TAB> <TAB> if refiner is None : <TAB> <TAB> self . train_cfg [ ""train_refiner"" ] = False <TAB> <TAB> self . test_cfg [ ""refine"" ] = False <TAB> else : <TAB> <TAB> self . refiner = build_component ( refiner ) <TAB> <TAB> if train_cfg is not None : <TAB> <TAB> assert hasattr ( self . train_cfg , ""train_refiner"" ) <TAB> <TAB> assert hasattr ( self . test_cfg , ""refine"" ) <TAB> <TAB> if self . test_cfg . refine and not self . train_cfg . train_refiner : <TAB> <TAB> <TAB> print_log ( <TAB> <TAB> <TAB> <TAB> ""You are not training the refiner, but it is used for "" <TAB> <TAB> <TAB> <TAB> ""model forwarding."" , <TAB> <TAB> <TAB> <TAB> ""root"" , <TAB> <TAB> <TAB> <TAB> logging . WARNING , <TAB> <TAB> <TAB> ) <TAB> <TAB> if not self . train_cfg . train_backbone : <TAB> <TAB> <TAB> self . freeze_backbone ( ) <TAB> <TAB> if not hasattr ( self . test_cfg , ""metrics"" ) : <TAB> <TAB> raise KeyError ( 'Missing key ""metrics"" in test_cfg' ) <TAB> elif mmcv . is_list_of ( self . test_cfg . metrics , str ) : <TAB> <TAB> for metric in self . test_cfg . metrics : <TAB> <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> <TAB> raise KeyError ( f""metric {metric} is not supported"" ) <TAB> elif self . test_cfg . metrics is not None : <TAB> <TAB> raise TypeError ( ""metrics must be None or a list of str"" ) <TAB> self . init_weights ( pretrained )",if metric not in self . allowed_metrics :,493,"def__init__(self,__NEW_LINE__backbone,__NEW_LINE__refiner=None,__NEW_LINE__train_cfg=None,__NEW_LINE__test_cfg=None,__NEW_LINE__pretrained=None):__NEW_LINE__super(BaseMattor,self).__init__()__NEW_LINE____NEW_LINE__self.train_cfg=train_cfgiftrain_cfgisnotNoneelseConfigDict()__NEW_LINE__self.test_cfg=test_cfgiftest_cfgisnotNoneelseConfigDict()__NEW_LINE____NEW_LINE__self.backbone=build_backbone(backbone)__NEW_LINE__#buildrefinerifit'snotNone.__NEW_LINE__ifrefinerisNone:__NEW_LINE__self.train_cfg['train_refiner']=False__NEW_LINE__self.test_cfg['refine']=False__NEW_LINE__else:__NEW_LINE__self.refiner=build_component(refiner)__NEW_LINE____NEW_LINE__#ifargumenttrain_cfgisnotNone,validateiftheconfigisproper.__NEW_LINE__iftrain_cfgisnotNone:__NEW_LINE__asserthasattr(self.train_cfg,'train_refiner')__NEW_LINE__asserthasattr(self.test_cfg,'refine')__NEW_LINE__ifself.test_cfg.refineandnotself.train_cfg.train_refiner:__NEW_LINE__print_log(__NEW_LINE__'Youarenottrainingtherefiner,butitisusedfor'__NEW_LINE__'modelforwarding.','root',logging.WARNING)__NEW_LINE____NEW_LINE__ifnotself.train_cfg.train_backbone:__NEW_LINE__self.freeze_backbone()__NEW_LINE____NEW_LINE__#validateiftestconfigisproper__NEW_LINE__ifnothasattr(self.test_cfg,'metrics'):__NEW_LINE__raiseKeyError('Missingkey""metrics""intest_cfg')__NEW_LINE__elifmmcv.is_list_of(self.test_cfg.metrics,str):__NEW_LINE__formetricinself.test_cfg.metrics:__NEW_LINE__ifmetricnotinself.allowed_metrics:__NEW_LINE__raiseKeyError(f'metric{metric}isnotsupported')__NEW_LINE__elifself.test_cfg.metricsisnotNone:__NEW_LINE__raiseTypeError('metricsmustbeNoneoralistofstr')__NEW_LINE____NEW_LINE__self.init_weights(pretrained)"
+5037,"def do(tag):__NEW_LINE__    name = getattr(tag, 'name', None)__NEW_LINE__    # BeautifulSoup4 sometimes results in 'tag' having attributes that have__NEW_LINE__    # content 'None'__NEW_LINE__    name = name.lower() if name is not None else ''__NEW_LINE____NEW_LINE__    if not name:__NEW_LINE__        text(tag)__NEW_LINE__    elif name == 'h1':__NEW_LINE__        macro('.SH', _force_string(tag, tag).upper())__NEW_LINE__        w.started = True__NEW_LINE__    elif name == 'h2':__NEW_LINE__        macro('.SS', _force_string(tag, tag))__NEW_LINE__        w.started = True__NEW_LINE__    elif name.startswith('h') and len(name)==2:__NEW_LINE__        raise ValueError('%r invalid - man page headers must be h1 or h2'__NEW_LINE__                         % name)__NEW_LINE__    elif name == 'pre':__NEW_LINE__        t = _force_string(tag.code, tag.code)__NEW_LINE__        if t.strip():__NEW_LINE__            macro('.RS', '+4n')__NEW_LINE__            macro('.nf')__NEW_LINE__            w.write(_clean(t).rstrip())__NEW_LINE__            macro('.fi')__NEW_LINE__            macro('.RE')__NEW_LINE__            w.end_para()__NEW_LINE__    elif name == 'p' or name == 'br':__NEW_LINE__        g = re.match(re.compile(r'([^\n]*)\n *: +(.*)', re.S), str(tag))__NEW_LINE__        if g:__NEW_LINE__            # it's a definition list (which some versions of python-markdown__NEW_LINE__            # don't support, including the one in Debian-lenny, so we can't__NEW_LINE__            # enable that markdown extension).  Fake it up.__NEW_LINE__            do_definition(tag)__NEW_LINE__        else:__NEW_LINE__            text(tag)__NEW_LINE__            w.end_para()__NEW_LINE__    elif name == 'ul':__NEW_LINE__        do_list(tag)__NEW_LINE__    else:__NEW_LINE__        raise ValueError('non-man-compatible html tag %r' % name)","def do(tag):
+    name = getattr(tag, ""name"", None)
+    # BeautifulSoup4 sometimes results in 'tag' having attributes that have
+    # content 'None'
+    name = name.lower() if name is not None else """"
+    if not name:
+        text(tag)
+    elif name == ""h1"":
+        macro("".SH"", _force_string(tag, tag).upper())
+        w.started = True
+    elif name == ""h2"":
+        macro("".SS"", _force_string(tag, tag))
+        w.started = True
+    elif name.startswith(""h"") and len(name) == 2:
+        raise ValueError(""%r invalid - man page headers must be h1 or h2"" % name)
+    elif name == ""pre"":
+        t = _force_string(tag.code, tag.code)
+        if t.strip():
+            macro("".RS"", ""+4n"")
+            macro("".nf"")
+            w.write(_clean(t).rstrip())
+            macro("".fi"")
+            macro("".RE"")
+            w.end_para()
+    elif name == ""p"" or name == ""br"":
+        g = re.match(re.compile(r""([^\n]*)\n *: +(.*)"", re.S), str(tag))
+        if g:
+            # it's a definition list (which some versions of python-markdown
+            # don't support, including the one in Debian-lenny, so we can't
+            # enable that markdown extension).  Fake it up.
+            do_definition(tag)
+        else:
+            text(tag)
+            w.end_para()
+    elif name == ""ul"":
+        do_list(tag)
+    else:
+        raise ValueError(""non-man-compatible html tag %r"" % name)
+","def do ( tag ) : <TAB> name = getattr ( tag , ""name"" , None ) <TAB> <TAB> <TAB> name = name . lower ( ) if name is not None else """" <TAB> if not name : <TAB> <TAB> text ( tag ) <TAB> elif name == ""h1"" : <TAB> <TAB> macro ( "".SH"" , _force_string ( tag , tag ) . upper ( ) ) <TAB> <TAB> w . started = True <TAB> elif name == ""h2"" : <TAB> <TAB> macro ( "".SS"" , _force_string ( tag , tag ) ) <TAB> <TAB> w . started = True <TAB> elif name . startswith ( ""h"" ) and len ( name ) == 2 : <TAB> <TAB> raise ValueError ( ""%r invalid - man page headers must be h1 or h2"" % name ) <TAB> elif name == ""pre"" : <TAB> <TAB> t = _force_string ( tag . code , tag . code ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> macro ( "".RS"" , ""+4n"" ) <TAB> <TAB> <TAB> macro ( "".nf"" ) <TAB> <TAB> <TAB> w . write ( _clean ( t ) . rstrip ( ) ) <TAB> <TAB> <TAB> macro ( "".fi"" ) <TAB> <TAB> <TAB> macro ( "".RE"" ) <TAB> <TAB> <TAB> w . end_para ( ) <TAB> elif name == ""p"" or name == ""br"" : <TAB> <TAB> g = re . match ( re . compile ( r""([^\n]*)\n *: +(.*)"" , re . S ) , str ( tag ) ) <TAB> <TAB> if g : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> do_definition ( tag ) <TAB> <TAB> else : <TAB> <TAB> <TAB> text ( tag ) <TAB> <TAB> <TAB> w . end_para ( ) <TAB> elif name == ""ul"" : <TAB> <TAB> do_list ( tag ) <TAB> else : <TAB> <TAB> raise ValueError ( ""non-man-compatible html tag %r"" % name )",if t . strip ( ) :,451,"defdo(tag):__NEW_LINE__name=getattr(tag,'name',None)__NEW_LINE__#BeautifulSoup4sometimesresultsin'tag'havingattributesthathave__NEW_LINE__#content'None'__NEW_LINE__name=name.lower()ifnameisnotNoneelse''__NEW_LINE____NEW_LINE__ifnotname:__NEW_LINE__text(tag)__NEW_LINE__elifname=='h1':__NEW_LINE__macro('.SH',_force_string(tag,tag).upper())__NEW_LINE__w.started=True__NEW_LINE__elifname=='h2':__NEW_LINE__macro('.SS',_force_string(tag,tag))__NEW_LINE__w.started=True__NEW_LINE__elifname.startswith('h')andlen(name)==2:__NEW_LINE__raiseValueError('%rinvalid-manpageheadersmustbeh1orh2'__NEW_LINE__%name)__NEW_LINE__elifname=='pre':__NEW_LINE__t=_force_string(tag.code,tag.code)__NEW_LINE__ift.strip():__NEW_LINE__macro('.RS','+4n')__NEW_LINE__macro('.nf')__NEW_LINE__w.write(_clean(t).rstrip())__NEW_LINE__macro('.fi')__NEW_LINE__macro('.RE')__NEW_LINE__w.end_para()__NEW_LINE__elifname=='p'orname=='br':__NEW_LINE__g=re.match(re.compile(r'([^\n]*)\n*:+(.*)',re.S),str(tag))__NEW_LINE__ifg:__NEW_LINE__#it'sadefinitionlist(whichsomeversionsofpython-markdown__NEW_LINE__#don'tsupport,includingtheoneinDebian-lenny,sowecan't__NEW_LINE__#enablethatmarkdownextension).Fakeitup.__NEW_LINE__do_definition(tag)__NEW_LINE__else:__NEW_LINE__text(tag)__NEW_LINE__w.end_para()__NEW_LINE__elifname=='ul':__NEW_LINE__do_list(tag)__NEW_LINE__else:__NEW_LINE__raiseValueError('non-man-compatiblehtmltag%r'%name)"
+16211,"    def upgrade_state_dict_named(self, state_dict, name):__NEW_LINE__        """"""Upgrade a (possibly old) state dict for new versions of fairseq.""""""__NEW_LINE__        if isinstance(self.embed_positions, SinusoidalPositionalEmbedding):__NEW_LINE__            weights_key = ""{}.embed_positions.weights"".format(name)__NEW_LINE__            if weights_key in state_dict:__NEW_LINE__                del state_dict[weights_key]__NEW_LINE__            state_dict[__NEW_LINE__                ""{}.embed_positions._float_tensor"".format(name)__NEW_LINE__            ] = torch.FloatTensor(1)__NEW_LINE____NEW_LINE__        for i in range(len(self.layers)):__NEW_LINE__            # update layer norms__NEW_LINE__            layer_norm_map = {__NEW_LINE__                ""0"": ""self_attn_layer_norm"",__NEW_LINE__                ""1"": ""encoder_attn_layer_norm"",__NEW_LINE__                ""2"": ""final_layer_norm"",__NEW_LINE__            }__NEW_LINE__            for old, new in layer_norm_map.items():__NEW_LINE__                for m in (""weight"", ""bias""):__NEW_LINE__                    k = ""{}.layers.{}.layer_norms.{}.{}"".format(name, i, old, m)__NEW_LINE__                    if k in state_dict:__NEW_LINE__                        state_dict[__NEW_LINE__                            ""{}.layers.{}.{}.{}"".format(name, i, new, m)__NEW_LINE__                        ] = state_dict[k]__NEW_LINE__                        del state_dict[k]__NEW_LINE____NEW_LINE__        version_key = ""{}.version"".format(name)__NEW_LINE__        if utils.item(state_dict.get(version_key, torch.Tensor([1]))[0]) <= 2:__NEW_LINE__            # earlier checkpoints did not normalize after the stack of layers__NEW_LINE__            self.layer_norm = None__NEW_LINE__            self.normalize = False__NEW_LINE__            state_dict[version_key] = torch.Tensor([1])__NEW_LINE____NEW_LINE__        return state_dict","def upgrade_state_dict_named(self, state_dict, name):
+    """"""Upgrade a (possibly old) state dict for new versions of fairseq.""""""
+    if isinstance(self.embed_positions, SinusoidalPositionalEmbedding):
+        weights_key = ""{}.embed_positions.weights"".format(name)
+        if weights_key in state_dict:
+            del state_dict[weights_key]
+        state_dict[""{}.embed_positions._float_tensor"".format(name)] = torch.FloatTensor(
+            1
+        )
+    for i in range(len(self.layers)):
+        # update layer norms
+        layer_norm_map = {
+            ""0"": ""self_attn_layer_norm"",
+            ""1"": ""encoder_attn_layer_norm"",
+            ""2"": ""final_layer_norm"",
+        }
+        for old, new in layer_norm_map.items():
+            for m in (""weight"", ""bias""):
+                k = ""{}.layers.{}.layer_norms.{}.{}"".format(name, i, old, m)
+                if k in state_dict:
+                    state_dict[
+                        ""{}.layers.{}.{}.{}"".format(name, i, new, m)
+                    ] = state_dict[k]
+                    del state_dict[k]
+    version_key = ""{}.version"".format(name)
+    if utils.item(state_dict.get(version_key, torch.Tensor([1]))[0]) <= 2:
+        # earlier checkpoints did not normalize after the stack of layers
+        self.layer_norm = None
+        self.normalize = False
+        state_dict[version_key] = torch.Tensor([1])
+    return state_dict
+","def upgrade_state_dict_named ( self , state_dict , name ) : <TAB> """"""Upgrade a (possibly old) state dict for new versions of fairseq."""""" <TAB> if isinstance ( self . embed_positions , SinusoidalPositionalEmbedding ) : <TAB> <TAB> weights_key = ""{}.embed_positions.weights"" . format ( name ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> del state_dict [ weights_key ] <TAB> <TAB> state_dict [ ""{}.embed_positions._float_tensor"" . format ( name ) ] = torch . FloatTensor ( <TAB> <TAB> <TAB> 1 <TAB> <TAB> ) <TAB> for i in range ( len ( self . layers ) ) : <TAB> <TAB> <TAB> <TAB> layer_norm_map = { <TAB> <TAB> <TAB> ""0"" : ""self_attn_layer_norm"" , <TAB> <TAB> <TAB> ""1"" : ""encoder_attn_layer_norm"" , <TAB> <TAB> <TAB> ""2"" : ""final_layer_norm"" , <TAB> <TAB> } <TAB> <TAB> for old , new in layer_norm_map . items ( ) : <TAB> <TAB> <TAB> for m in ( ""weight"" , ""bias"" ) : <TAB> <TAB> <TAB> <TAB> k = ""{}.layers.{}.layer_norms.{}.{}"" . format ( name , i , old , m ) <TAB> <TAB> <TAB> <TAB> if k in state_dict : <TAB> <TAB> <TAB> <TAB> <TAB> state_dict [ <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> ""{}.layers.{}.{}.{}"" . format ( name , i , new , m ) <TAB> <TAB> <TAB> <TAB> <TAB> ] = state_dict [ k ] <TAB> <TAB> <TAB> <TAB> <TAB> del state_dict [ k ] <TAB> version_key = ""{}.version"" . format ( name ) <TAB> if utils . item ( state_dict . get ( version_key , torch . Tensor ( [ 1 ] ) ) [ 0 ] ) <= 2 : <TAB> <TAB> <TAB> <TAB> self . layer_norm = None <TAB> <TAB> self . normalize = False <TAB> <TAB> state_dict [ version_key ] = torch . Tensor ( [ 1 ] ) <TAB> return state_dict",if weights_key in state_dict :,436,"defupgrade_state_dict_named(self,state_dict,name):__NEW_LINE__""""""Upgradea(possiblyold)statedictfornewversionsoffairseq.""""""__NEW_LINE__ifisinstance(self.embed_positions,SinusoidalPositionalEmbedding):__NEW_LINE__weights_key=""{}.embed_positions.weights"".format(name)__NEW_LINE__ifweights_keyinstate_dict:__NEW_LINE__delstate_dict[weights_key]__NEW_LINE__state_dict[__NEW_LINE__""{}.embed_positions._float_tensor"".format(name)__NEW_LINE__]=torch.FloatTensor(1)__NEW_LINE____NEW_LINE__foriinrange(len(self.layers)):__NEW_LINE__#updatelayernorms__NEW_LINE__layer_norm_map={__NEW_LINE__""0"":""self_attn_layer_norm"",__NEW_LINE__""1"":""encoder_attn_layer_norm"",__NEW_LINE__""2"":""final_layer_norm"",__NEW_LINE__}__NEW_LINE__forold,newinlayer_norm_map.items():__NEW_LINE__formin(""weight"",""bias""):__NEW_LINE__k=""{}.layers.{}.layer_norms.{}.{}"".format(name,i,old,m)__NEW_LINE__ifkinstate_dict:__NEW_LINE__state_dict[__NEW_LINE__""{}.layers.{}.{}.{}"".format(name,i,new,m)__NEW_LINE__]=state_dict[k]__NEW_LINE__delstate_dict[k]__NEW_LINE____NEW_LINE__version_key=""{}.version"".format(name)__NEW_LINE__ifutils.item(state_dict.get(version_key,torch.Tensor([1]))[0])<=2:__NEW_LINE__#earliercheckpointsdidnotnormalizeafterthestackoflayers__NEW_LINE__self.layer_norm=None__NEW_LINE__self.normalize=False__NEW_LINE__state_dict[version_key]=torch.Tensor([1])__NEW_LINE____NEW_LINE__returnstate_dict"
+22212,"		def replacefunc(elt):__NEW_LINE__			text = elt.attrib['href']__NEW_LINE__			if link_type(text) != 'page':__NEW_LINE__				raise zim.formats.VisitorSkip__NEW_LINE____NEW_LINE__			href = HRef.new_from_wiki_link(text)__NEW_LINE__			if href.rel == HREF_REL_RELATIVE:__NEW_LINE__				raise zim.formats.VisitorSkip__NEW_LINE__			elif href.rel == HREF_REL_ABSOLUTE:__NEW_LINE__				oldtarget = self.pages.resolve_link(page, href)__NEW_LINE__				if oldtarget == oldroot:__NEW_LINE__					return self._update_link_tag(elt, page, newroot, href)__NEW_LINE__				elif oldtarget.ischild(oldroot):__NEW_LINE__					newtarget = newroot + oldtarget.relname(oldroot)__NEW_LINE__					return self._update_link_tag(elt, page, newtarget, href)__NEW_LINE__				else:__NEW_LINE__					raise zim.formats.VisitorSkip__NEW_LINE__			else:__NEW_LINE__				assert href.rel == HREF_REL_FLOATING__NEW_LINE__				newtarget = self.pages.resolve_link(page, href)__NEW_LINE__				oldtarget = self.pages.resolve_link(oldpath, href)__NEW_LINE____NEW_LINE__				if oldtarget == oldroot:__NEW_LINE__					return self._update_link_tag(elt, page, newroot, href)__NEW_LINE__				elif oldtarget.ischild(oldroot):__NEW_LINE__					oldanchor = self.pages.resolve_link(oldpath, HRef(HREF_REL_FLOATING, href.parts()[0]))__NEW_LINE__					if oldanchor.ischild(oldroot):__NEW_LINE__						raise zim.formats.VisitorSkip # oldtarget cannot be trusted__NEW_LINE__					else:__NEW_LINE__						newtarget = newroot + oldtarget.relname(oldroot)__NEW_LINE__						return self._update_link_tag(elt, page, newtarget, href)__NEW_LINE__				elif newtarget != oldtarget:__NEW_LINE__					# Redirect back to old target__NEW_LINE__					return self._update_link_tag(elt, page, oldtarget, href)__NEW_LINE__				else:__NEW_LINE__					raise zim.formats.VisitorSkip","def replacefunc(elt):
+    text = elt.attrib[""href""]
+    if link_type(text) != ""page"":
+        raise zim.formats.VisitorSkip
+    href = HRef.new_from_wiki_link(text)
+    if href.rel == HREF_REL_RELATIVE:
+        raise zim.formats.VisitorSkip
+    elif href.rel == HREF_REL_ABSOLUTE:
+        oldtarget = self.pages.resolve_link(page, href)
+        if oldtarget == oldroot:
+            return self._update_link_tag(elt, page, newroot, href)
+        elif oldtarget.ischild(oldroot):
+            newtarget = newroot + oldtarget.relname(oldroot)
+            return self._update_link_tag(elt, page, newtarget, href)
+        else:
+            raise zim.formats.VisitorSkip
+    else:
+        assert href.rel == HREF_REL_FLOATING
+        newtarget = self.pages.resolve_link(page, href)
+        oldtarget = self.pages.resolve_link(oldpath, href)
+        if oldtarget == oldroot:
+            return self._update_link_tag(elt, page, newroot, href)
+        elif oldtarget.ischild(oldroot):
+            oldanchor = self.pages.resolve_link(
+                oldpath, HRef(HREF_REL_FLOATING, href.parts()[0])
+            )
+            if oldanchor.ischild(oldroot):
+                raise zim.formats.VisitorSkip  # oldtarget cannot be trusted
+            else:
+                newtarget = newroot + oldtarget.relname(oldroot)
+                return self._update_link_tag(elt, page, newtarget, href)
+        elif newtarget != oldtarget:
+            # Redirect back to old target
+            return self._update_link_tag(elt, page, oldtarget, href)
+        else:
+            raise zim.formats.VisitorSkip
+","def replacefunc ( elt ) : <TAB> text = elt . attrib [ ""href"" ] <TAB> if link_type ( text ) != ""page"" : <TAB> <TAB> raise zim . formats . VisitorSkip <TAB> href = HRef . new_from_wiki_link ( text ) <TAB> if href . rel == HREF_REL_RELATIVE : <TAB> <TAB> raise zim . formats . VisitorSkip <TAB> elif href . rel == HREF_REL_ABSOLUTE : <TAB> <TAB> oldtarget = self . pages . resolve_link ( page , href ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> return self . _update_link_tag ( elt , page , newroot , href ) <TAB> <TAB> elif oldtarget . ischild ( oldroot ) : <TAB> <TAB> <TAB> newtarget = newroot + oldtarget . relname ( oldroot ) <TAB> <TAB> <TAB> return self . _update_link_tag ( elt , page , newtarget , href ) <TAB> <TAB> else : <TAB> <TAB> <TAB> raise zim . formats . VisitorSkip <TAB> else : <TAB> <TAB> assert href . rel == HREF_REL_FLOATING <TAB> <TAB> newtarget = self . pages . resolve_link ( page , href ) <TAB> <TAB> oldtarget = self . pages . resolve_link ( oldpath , href ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> return self . _update_link_tag ( elt , page , newroot , href ) <TAB> <TAB> elif oldtarget . ischild ( oldroot ) : <TAB> <TAB> <TAB> oldanchor = self . pages . resolve_link ( <TAB> <TAB> <TAB> <TAB> oldpath , HRef ( HREF_REL_FLOATING , href . parts ( ) [ 0 ] ) <TAB> <TAB> <TAB> ) <TAB> <TAB> <TAB> if oldanchor . ischild ( oldroot ) : <TAB> <TAB> <TAB> <TAB> raise zim . formats . VisitorSkip <TAB> <TAB> <TAB> else : <TAB> <TAB> <TAB> <TAB> newtarget = newroot + oldtarget . relname ( oldroot ) <TAB> <TAB> <TAB> <TAB> return self . _update_link_tag ( elt , page , newtarget , href ) <TAB> <TAB> elif newtarget != oldtarget : <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> return self . _update_link_tag ( elt , page , oldtarget , href ) <TAB> <TAB> else : <TAB> <TAB> <TAB> raise zim . formats . VisitorSkip",if oldtarget == oldroot :,505,"defreplacefunc(elt):__NEW_LINE__text=elt.attrib['href']__NEW_LINE__iflink_type(text)!='page':__NEW_LINE__raisezim.formats.VisitorSkip__NEW_LINE____NEW_LINE__href=HRef.new_from_wiki_link(text)__NEW_LINE__ifhref.rel==HREF_REL_RELATIVE:__NEW_LINE__raisezim.formats.VisitorSkip__NEW_LINE__elifhref.rel==HREF_REL_ABSOLUTE:__NEW_LINE__oldtarget=self.pages.resolve_link(page,href)__NEW_LINE__ifoldtarget==oldroot:__NEW_LINE__returnself._update_link_tag(elt,page,newroot,href)__NEW_LINE__elifoldtarget.ischild(oldroot):__NEW_LINE__newtarget=newroot+oldtarget.relname(oldroot)__NEW_LINE__returnself._update_link_tag(elt,page,newtarget,href)__NEW_LINE__else:__NEW_LINE__raisezim.formats.VisitorSkip__NEW_LINE__else:__NEW_LINE__asserthref.rel==HREF_REL_FLOATING__NEW_LINE__newtarget=self.pages.resolve_link(page,href)__NEW_LINE__oldtarget=self.pages.resolve_link(oldpath,href)__NEW_LINE____NEW_LINE__ifoldtarget==oldroot:__NEW_LINE__returnself._update_link_tag(elt,page,newroot,href)__NEW_LINE__elifoldtarget.ischild(oldroot):__NEW_LINE__oldanchor=self.pages.resolve_link(oldpath,HRef(HREF_REL_FLOATING,href.parts()[0]))__NEW_LINE__ifoldanchor.ischild(oldroot):__NEW_LINE__raisezim.formats.VisitorSkip#oldtargetcannotbetrusted__NEW_LINE__else:__NEW_LINE__newtarget=newroot+oldtarget.relname(oldroot)__NEW_LINE__returnself._update_link_tag(elt,page,newtarget,href)__NEW_LINE__elifnewtarget!=oldtarget:__NEW_LINE__#Redirectbacktooldtarget__NEW_LINE__returnself._update_link_tag(elt,page,oldtarget,href)__NEW_LINE__else:__NEW_LINE__raisezim.formats.VisitorSkip"
+934,"    def put_blank_line(self, trace, count=1):__NEW_LINE__        count -= self.blank_line_count__NEW_LINE__        while count > ZERO:__NEW_LINE__            self.put(BLANK_LINE)  # 2006 Dec 14__NEW_LINE__            self.put(self.newline)  # 2006 Dec 05__NEW_LINE__            if DEBUG:__NEW_LINE__                self.put('blank(%s)' % str(trace))  # 2006 Dec 14__NEW_LINE__            self.blank_line_count += 1__NEW_LINE__            count -= 1__NEW_LINE__        return self","def put_blank_line(self, trace, count=1):
+    count -= self.blank_line_count
+    while count > ZERO:
+        self.put(BLANK_LINE)  # 2006 Dec 14
+        self.put(self.newline)  # 2006 Dec 05
+        if DEBUG:
+            self.put(""blank(%s)"" % str(trace))  # 2006 Dec 14
+        self.blank_line_count += 1
+        count -= 1
+    return self
+","def put_blank_line ( self , trace , count = 1 ) : <TAB> count -= self . blank_line_count <TAB> while count > ZERO : <TAB> <TAB> self . put ( BLANK_LINE ) <TAB> <TAB> self . put ( self . newline ) <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> self . put ( ""blank(%s)"" % str ( trace ) ) <TAB> <TAB> self . blank_line_count += 1 <TAB> <TAB> count -= 1 <TAB> return self",if DEBUG :,117,"defput_blank_line(self,trace,count=1):__NEW_LINE__count-=self.blank_line_count__NEW_LINE__whilecount>ZERO:__NEW_LINE__self.put(BLANK_LINE)#2006Dec14__NEW_LINE__self.put(self.newline)#2006Dec05__NEW_LINE__ifDEBUG:__NEW_LINE__self.put('blank(%s)'%str(trace))#2006Dec14__NEW_LINE__self.blank_line_count+=1__NEW_LINE__count-=1__NEW_LINE__returnself"
+11050,"    def test(self, setting):__NEW_LINE__        self.logger.debug(""Testing connection to snzbget"")__NEW_LINE__        rpc = self.get_rpc(setting.host, setting.ssl, setting.port, setting.username, urllib.quote(setting.password.encode(""utf-8"")))__NEW_LINE____NEW_LINE__        try:__NEW_LINE__            if rpc.writelog('INFO', 'NZB Hydra connected to test connection'):__NEW_LINE__                version = rpc.version()__NEW_LINE__                #todo: show error if version older than 13__NEW_LINE__                if int(version[:2]) < 13:__NEW_LINE__                    self.logger.error(""NZBGet needs to be version 13 or higher"")__NEW_LINE__                    return False, ""NZBGet needs to be version 13 or higher""__NEW_LINE__                self.logger.info('Connection test to NZBGet successful')__NEW_LINE__            else:__NEW_LINE__                self.logger.info('Successfully connected to NZBGet, but unable to send a message')__NEW_LINE__        except socket.error:__NEW_LINE__            self.logger.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')__NEW_LINE__            return False, ""NZBGet is not responding under this address, scheme and port""__NEW_LINE__        except xmlrpc.client.ProtocolError as e:__NEW_LINE__            if e.errcode == 401:__NEW_LINE__                self.logger.error('Wrong credentials')__NEW_LINE__                return False, ""Wrong credentials""__NEW_LINE__            else:__NEW_LINE__                self.logger.error('Protocol error: %s', e)__NEW_LINE__            return False, str(e)__NEW_LINE__        except Exception as e:__NEW_LINE__            self.logger.exception(""Unknown error while communicating with NZBGet"")__NEW_LINE__            return False, str(e)__NEW_LINE__        return True, """"","def test(self, setting):
+    self.logger.debug(""Testing connection to snzbget"")
+    rpc = self.get_rpc(
+        setting.host,
+        setting.ssl,
+        setting.port,
+        setting.username,
+        urllib.quote(setting.password.encode(""utf-8"")),
+    )
+    try:
+        if rpc.writelog(""INFO"", ""NZB Hydra connected to test connection""):
+            version = rpc.version()
+            # todo: show error if version older than 13
+            if int(version[:2]) < 13:
+                self.logger.error(""NZBGet needs to be version 13 or higher"")
+                return False, ""NZBGet needs to be version 13 or higher""
+            self.logger.info(""Connection test to NZBGet successful"")
+        else:
+            self.logger.info(
+                ""Successfully connected to NZBGet, but unable to send a message""
+            )
+    except socket.error:
+        self.logger.error(
+            ""NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.""
+        )
+        return False, ""NZBGet is not responding under this address, scheme and port""
+    except xmlrpc.client.ProtocolError as e:
+        if e.errcode == 401:
+            self.logger.error(""Wrong credentials"")
+            return False, ""Wrong credentials""
+        else:
+            self.logger.error(""Protocol error: %s"", e)
+        return False, str(e)
+    except Exception as e:
+        self.logger.exception(""Unknown error while communicating with NZBGet"")
+        return False, str(e)
+    return True, """"
+","def test ( self , setting ) : <TAB> self . logger . debug ( ""Testing connection to snzbget"" ) <TAB> rpc = self . get_rpc ( <TAB> <TAB> setting . host , <TAB> <TAB> setting . ssl , <TAB> <TAB> setting . port , <TAB> <TAB> setting . username , <TAB> <TAB> urllib . quote ( setting . password . encode ( ""utf-8"" ) ) , <TAB> ) <TAB> try : <TAB> <TAB> if rpc . writelog ( ""INFO"" , ""NZB Hydra connected to test connection"" ) : <TAB> <TAB> <TAB> version = rpc . version ( ) <TAB> <TAB> <TAB> <TAB> <TAB> <TAB> if int ( version [ : 2 ] ) < 13 : <TAB> <TAB> <TAB> <TAB> self . logger . error ( ""NZBGet needs to be version 13 or higher"" ) <TAB> <TAB> <TAB> <TAB> return False , ""NZBGet needs to be version 13 or higher"" <TAB> <TAB> <TAB> self . logger . info ( ""Connection test to NZBGet successful"" ) <TAB> <TAB> else : <TAB> <TAB> <TAB> self . logger . info ( <TAB> <TAB> <TAB> <TAB> ""Successfully connected to NZBGet, but unable to send a message"" <TAB> <TAB> <TAB> ) <TAB> except socket . error : <TAB> <TAB> self . logger . error ( <TAB> <TAB> <TAB> ""NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct."" <TAB> <TAB> ) <TAB> <TAB> return False , ""NZBGet is not responding under this address, scheme and port"" <TAB> except xmlrpc . client . ProtocolError as e : <TAB> <TAB> <fill-in> <TAB> <TAB> <TAB> self . logger . error ( ""Wrong credentials"" ) <TAB> <TAB> <TAB> return False , ""Wrong credentials"" <TAB> <TAB> else : <TAB> <TAB> <TAB> self . logger . error ( ""Protocol error: %s"" , e ) <TAB> <TAB> return False , str ( e ) <TAB> except Exception as e : <TAB> <TAB> self . logger . exception ( ""Unknown error while communicating with NZBGet"" ) <TAB> <TAB> return False , str ( e ) <TAB> return True , """"",if e . errcode == 401 :,451,"deftest(self,setting):__NEW_LINE__self.logger.debug(""Testingconnectiontosnzbget"")__NEW_LINE__rpc=self.get_rpc(setting.host,setting.ssl,setting.port,setting.username,urllib.quote(setting.password.encode(""utf-8"")))__NEW_LINE____NEW_LINE__try:__NEW_LINE__ifrpc.writelog('INFO','NZBHydraconnectedtotestconnection'):__NEW_LINE__version=rpc.version()__NEW_LINE__#todo:showerrorifversionolderthan13__NEW_LINE__ifint(version[:2])<13:__NEW_LINE__self.logger.error(""NZBGetneedstobeversion13orhigher"")__NEW_LINE__returnFalse,""NZBGetneedstobeversion13orhigher""__NEW_LINE__self.logger.info('ConnectiontesttoNZBGetsuccessful')__NEW_LINE__else:__NEW_LINE__self.logger.info('SuccessfullyconnectedtoNZBGet,butunabletosendamessage')__NEW_LINE__exceptsocket.error:__NEW_LINE__self.logger.error('NZBGetisnotresponding.PleaseensurethatNZBGetisrunningandhostsettingiscorrect.')__NEW_LINE__returnFalse,""NZBGetisnotrespondingunderthisaddress,schemeandport""__NEW_LINE__exceptxmlrpc.client.ProtocolErrorase:__NEW_LINE__ife.errcode==401:__NEW_LINE__self.logger.error('Wrongcredentials')__NEW_LINE__returnFalse,""Wrongcredentials""__NEW_LINE__else:__NEW_LINE__self.logger.error('Protocolerror:%s',e)__NEW_LINE__returnFalse,str(e)__NEW_LINE__exceptExceptionase:__NEW_LINE__self.logger.exception(""UnknownerrorwhilecommunicatingwithNZBGet"")__NEW_LINE__returnFalse,str(e)__NEW_LINE__returnTrue,"""""
